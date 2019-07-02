@@ -10,7 +10,7 @@ private:
 	void fillForces();
 
 public:
-	void init(std::shared_ptr<WideParticle>, size_t);
+	void init(std::shared_ptr<Particle>, size_t);
 	Particle* iterate();
 	~SequentialComputer();
 };
