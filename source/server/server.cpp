@@ -1,53 +1,35 @@
 #include <boost/asio.hpp>
 #include <mpi/mpi.h>
+#include "../computer/abstractComputer.h"
+#include <queue>
+#include <iostream>
+#include "../computer/sequentialComputer.h"
 
 using namespace boost::asio::ip;
 
-void start_message(const std::string &msg) {
-    if (msg.size() < 5) return;
-    int count_objects = (msg.at(5) << 24) | (msg.at(6) << 16) | (msg.at(7) << 8) | (msg.at(8));
-    std::string objects_inf = msg.substr(9, msg.size()-9);
-    for (int i = 0; i < count_objects; ++i) {
-        float x;
-        float y;
-        float z;
-        float mass;
-        memcpy(&x, objects_inf.c_str() + i*4, sizeof(float));
-        memcpy(&y, objects_inf.c_str() + (i+1)*4, sizeof(float));
-        memcpy(&z, objects_inf.c_str() + (i+2)*4, sizeof(float));
-        memcpy(&mass, objects_inf.c_str() + (i+3)*4, sizeof(float));
-    }
-}
+const Particle* parse_message(const std::string &msg, std::shared_ptr<Computer> computer);
 
-void parse_message(const std::string &msg) {
-    if (!msg.compare(0, 5, "START")) {
+std::string construct_data_message(const Particle* particles, size_t count);
 
-    } else if (!msg.compare(0, 4, "STOP")) {
-
-    } else if (!msg.compare(0, 4, "NEXT")) {
-
-    }
-}
-
-void read_message(tcp::socket &sock) {
+std::string read_message(tcp::socket &sock) {
     boost::asio::streambuf buf;
     boost::asio::read_until(sock, buf, "\r\n");
-    std::string msg(boost::asio::buffers_begin(buf), boost::asio::buffers_end(buf));
-
+    std::string msg{boost::asio::buffers_begin(buf.data()), boost::asio::buffers_end(buf.data())};
+    return msg;
 }
 
-
+void write_message(tcp::socket &sock, const std::string &msg) {
+    boost::asio::write(sock, boost::asio::buffer(msg));
+}
 
 class Server {
-private:
-    class Connection;
 
 public:
 
     Server(boost::asio::io_service &io_service, tcp::endpoint &endpoint) : acceptor(io_service, endpoint),
                                                                            io_service(io_service) {}
 
-    void startAccept();
+    void start_accept();
 
     ~Server() = default;
 
@@ -62,30 +44,56 @@ private:
         }
 
         void start() {
-            std::thread thread([this] (){
+            std::thread recv_thread([this] (){
                 while (true) {
-
+                    const std::string msg = read_message(sock);
+                    const Particle* result = parse_message(msg, computer);
+                    if (result == nullptr) {
+                        //TODO break arrays
+                    } else {
+                        particles_queue.push(result);
+                    }
+                        
                 }
             });
-            thread.detach();
+            recv_thread.detach();
+
+            std::thread send_thread([this] () {
+                while (true) {
+                    std::unique_lock<std::mutex> lck(mutex);
+                    while (isEmptyQueue) cond_var.wait(lck);
+                    mutex.lock();
+                    const auto msg = construct_data_message(particles_queue.front(), computer->getSize());
+                    particles_queue.pop();
+                    if (particles_queue.empty()) isEmptyQueue = true;
+                    mutex.unlock();
+                    write_message(sock, msg);
+                }
+            });
+            send_thread.detach();
         }
 
     private:
+        bool isEmptyQueue = true;
+        std::mutex mutex;
+        std::condition_variable cond_var;
         tcp::socket sock;
+        std::queue<const Particle*> particles_queue{};
+        std::shared_ptr<Computer> computer;
     };
 
     void handle(const boost::shared_ptr<Connection> &connection, const boost::system::error_code &error_code) {
         if (!error_code) {
             connection->start();
         }
-        this->startAccept();
+        this->start_accept();
     }
 
     boost::asio::io_service &io_service;
     tcp::acceptor acceptor;
 };
 
-void Server::startAccept() {
+void Server::start_accept() {
     boost::shared_ptr<Connection> connection(new Connection(io_service));
     acceptor.async_accept(connection->socket(), [this, connection](const boost::system::error_code &error_code) {
         this->handle(connection, error_code);
@@ -93,9 +101,24 @@ void Server::startAccept() {
 }
 
 int main(int argc, char *argv[]) {
-    int rank, size;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+//    int rank, size;
+//    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    try {
+        const unsigned short port = (argc > 1 ? static_cast<unsigned short>(std::stoi(argv[1])) : 1234);
+
+        boost::asio::io_service io_service;
+        tcp::endpoint ep{tcp::v4(), port};
+        Server server(io_service, ep);
+
+        server.start_accept();
+        io_service.run();
+    }
+    catch (const std::exception &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
 
     return 0;
+
 }
 
