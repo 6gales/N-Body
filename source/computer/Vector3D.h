@@ -7,7 +7,7 @@ public:
 			y,
 			z;
 
-	Vector3D() : x(0.0), y(0.0), z(0.0);
+	Vector3D() : x(0.0), y(0.0), z(0.0) {}
 	Vector3D(double _x, double _y, double _z) : x(_x), y(_y), z(_z){}
 	~Vector3D() {}
 
@@ -39,6 +39,7 @@ public:
 		x += v.x;
 		y += v.y;
 		z += v.z;
+		return *this;
 	}
 
 	const Vector3D& operator-=(const Vector3D &v)
@@ -46,9 +47,10 @@ public:
 		x -= v.x;
 		y -= v.y;
 		z -= v.z;
+		return *this;
 	}
 
-	double module(const Vector3D &v)
+	double module()
 	{
 		return x * x + y * y + z * z;
 	}
@@ -56,12 +58,10 @@ public:
 };
 
 
-Vector3D operator*(const Vector3D &v, double mul)
-{
-	return Vector3D(v.x * mul, v.y * mul, v.z * mul);
-}
+Vector3D operator*(const Vector3D &v, double mul);
 
-Vector3D operator*(double mul, const Vector3D &v)
-{
-	return v * mul;
-}
+Vector3D operator*(double mul, const Vector3D &v);
+
+Vector3D operator+(const Vector3D &v1, const Vector3D &v2);
+
+Vector3D operator-(const Vector3D &v1, const Vector3D &v2);
