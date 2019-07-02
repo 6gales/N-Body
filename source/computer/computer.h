@@ -1,5 +1,8 @@
 #pragma once
 #include "abstractComputer.h"
+#include "sequentialComputer.h"
 
-
-Computer *getInstanceOf();
+Computer* getInstanceOf()
+{
+	return new SequentialComputer();
+}
