@@ -34,18 +34,34 @@ public:
 		return *this;
 	}
 
-	void operator+=(const Vector3D &v)
+	const Vector3D& operator+=(const Vector3D &v)
 	{
 		x += v.x;
 		y += v.y;
 		z += v.z;
 	}
 
-	void operator-=(const Vector3D &v)
+	const Vector3D& operator-=(const Vector3D &v)
 	{
 		x -= v.x;
 		y -= v.y;
 		z -= v.z;
 	}
 
+	double module(const Vector3D &v)
+	{
+		return x * x + y * y + z * z;
+	}
+
 };
+
+
+Vector3D operator*(const Vector3D &v, double mul)
+{
+	return Vector3D(v.x * mul, v.y * mul, v.z * mul);
+}
+
+Vector3D operator*(double mul, const Vector3D &v)
+{
+	return v * mul;
+}
