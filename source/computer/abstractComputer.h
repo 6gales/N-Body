@@ -10,34 +10,26 @@ using ull = unsigned long long;
 
 struct Task
 {
-	const ull N;
-	std::vector<Particle> particleVectors[2];
-	char previous = 1,
-		current = 0;
+	double mass = 0.0,
+			x = 0.0,
+			y = 0.0,
+			z = 0.0;
 
-	std::mutex mutex;
+	Particle(double _mass, double _x, double _y, double _z)
+			: mass(_mass), x(_x), y(_y), z(_z) {}
+	Particle(){}
+};
 
-	Task(ull _N, const std::vector<Particle> &parts) : N{_N}
-	{
-		particleVectors[0] = parts;
-		particleVectors[1] = parts;
-	}
+struct WideParticle : public Particle
+{
+	double v_x = 0.0,
+			v_y = 0.0,
+			v_z = 0.0;
 
-	Task(const Task &t) : N(t.N)
-	{
-		particleVectors[0] = t.particleVectors[0];
-		particleVectors[0] = t.particleVectors[0];
-		previous = t.previous;
-		current = t.current;
-	}
-
-	void next()
-	{
-		previous ^= 1;
-		current ^= 1;
-	}
-
-	const std::vector<Particle> &getUpdated() { return particleVectors[previous]; }
+	WideParticle() : Particle() {}
+	WideParticle(double _mass, double _x, double _y, double _z,
+				 double _v_x, double _v_y, double _v_z)
+			: Particle(_mass, _x, _y, _z), v_x(_v_x), v_y(_v_y), v_z(_v_z) {}
 };
 
 class Computer
