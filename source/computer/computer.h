@@ -4,7 +4,5 @@
 #include "ompComputer.h"
 #include "sequentialBHComputer.h"
 
-//Computer* getInstanceOf(size_t threads)
-//{
-//	return nullptr;//new SequentialComputer();
-//}
+
+Computer *getInstanceOf();
