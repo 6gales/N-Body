@@ -8,7 +8,7 @@
 #include "../computer/abstractComputer.h"
 
 const Particle* start_message(const std::string &msg, std::shared_ptr<Computer> computer) {
-    if (msg.size() < 5) return nullptr;
+    if (msg.size() <= 5) return nullptr;
     size_t count_particles = ((size_t)msg.at(5) << 56) | ((size_t)msg.at(6) << 48) | ((size_t)msg.at(7) << 40) | ((size_t)msg.at(8) << 32)
                              | ((size_t)msg.at(9) << 24) | ((size_t)msg.at(10) << 16) | ((size_t)msg.at(11) << 8) | (msg.at(12));
     std::string particles_info = msg.substr(13, msg.size()-13);
