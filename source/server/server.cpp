@@ -52,6 +52,8 @@ private:
                         //TODO break arrays
                     } else {
                         particles_queue.push(result);
+                        isEmptyQueue = false;
+                        cond_var.notify_one();
                     }
                         
                 }
