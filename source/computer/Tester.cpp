@@ -27,13 +27,13 @@ int main()
 
 	computer->init(parts, N);
 
-	for(int iter = 0; iter < 10; ++iter)
+	for(int iter = 0; iter < 1000; ++iter)
 	{
 		out << "====================ITERATION "<< iter <<"====================="<< std::endl;
 		Particle* buff = computer->iterate();
 		for(int i = 0; i < N; ++i)
 		{
-			std::cout << buff[i] << std::endl;
+			//std::cout << buff[i] << std::endl;
 			out << buff[i] << std::endl;
 		}
 		out << "====================ITERATION "<< iter <<"====================="<< std::endl << std::endl;
