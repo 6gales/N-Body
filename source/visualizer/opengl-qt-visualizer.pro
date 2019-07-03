@@ -25,17 +25,27 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp\
+    Particle.cpp \
+    Vector3D.cpp \
+    computer.cpp \
     main_window.cpp \
-    my_opengl_widget.cpp
+    my_opengl_widget.cpp \
+    sequentialComputer.cpp
 
 HEADERS  += \
+    Particle.h \
+    Vector3D.h \
+    abstractComputer.h \
+    computer.h \
     main_window.h \
-    my_opengl_widget.h
+    my_opengl_widget.h \
+    sequentialComputer.h
 
 FORMS    += \
     main_window.ui
 
 DISTFILES += \
+    in.txt \
     shaders/basic.vert \
     shaders/basic.frag
 
