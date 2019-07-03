@@ -47,9 +47,9 @@ const Particle* next_message(const std::string &msg, std::shared_ptr<Computer> c
 const Particle* parse_message(const std::string &msg, std::shared_ptr<Computer> computer) {
     if (!msg.compare(0, 5, "START")) {
         start_message(msg, computer);
-    } else if (!msg.compare(0, 4, "STOP")) {
+    } else if (!msg.compare(0, 5, "STOP ")) {
         stop_message(msg, computer);
-    } else if (!msg.compare(0, 4, "NEXT")) {
+    } else if (!msg.compare(0, 5, "NEXT ")) {
         next_message(msg, computer);
     }
 }
