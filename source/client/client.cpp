@@ -26,13 +26,17 @@ public:
 
     explicit Client(boost::asio::io_service& io_service) : io_service(io_service), sock{io_service} {}
 
+    tcp::socket& socket() {
+        return sock;
+    }
+
     void connect(const std::string &host, const unsigned short port) {
         tcp::resolver resolver(io_service);
 
         auto ep = resolver.resolve(host, std::to_string(port));
         boost::asio::connect(sock, ep);
 
-        std::thread write_thread([this]() {
+        std::thread write_thread{[this]() {
             while (true) {
                 std::unique_lock<std::mutex> lck(mutex);
                 while (isEmptyQueue) cond_var.wait(lck);
@@ -41,9 +45,18 @@ public:
                 msg_queue.pop();
                 if (msg_queue.empty()) isEmptyQueue = true;
                 mutex.unlock();
-                write_message(sock, msg);
+                write_message(this->socket(), msg);
             }
-        });
+        }};
+        write_thread.detach();
+
+        std::thread read_thread{[this]() {
+            while (true) {
+                const auto msg = read_message(this->socket());
+                //TODO convert msg to good format for visualisator
+            }
+        }};
+        read_thread.detach();
     }
 
     void start(std::ifstream &data_file) {

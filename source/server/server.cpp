@@ -51,7 +51,7 @@ private:
         void start() {
             std::thread recv_thread([this] (){
                 while (true) {
-                    const std::string msg = read_message(sock);
+                    const std::string msg = read_message(this->socket());
                     const Particle* result = parse_message(msg, computer);
                     if (result == nullptr) {
                         //TODO break arrays
@@ -74,7 +74,7 @@ private:
                     particles_queue.pop();
                     if (particles_queue.empty()) isEmptyQueue = true;
                     mutex.unlock();
-                    write_message(sock, msg);
+                    write_message(this->socket(), msg);
                 }
             });
             send_thread.detach();
@@ -109,8 +109,8 @@ void Server::start_accept() {
 }
 
 int main(int argc, char *argv[]) {
-    int rank, size;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+//    int rank, size;
+//    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     try {
         const unsigned short port = (argc > 1 ? static_cast<unsigned short>(std::stoi(argv[1])) : 1234);
