@@ -11,6 +11,6 @@ out vec3 vColor;
 void main()
 {
     gl_Position = MVP * vec4(vertex, 1.0f);
-    gl_PointSize = 1.0f;
+    gl_PointSize = 100.0f;
     vColor = color;
 }

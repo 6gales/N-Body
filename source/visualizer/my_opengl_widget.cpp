@@ -8,7 +8,10 @@ MyOpenGLWidget::MyOpenGLWidget(QWidget *parent) :
     QOpenGLWidget(parent),
     vertex_buffer(QOpenGLBuffer::VertexBuffer),
     color_buffer(QOpenGLBuffer::VertexBuffer),
-    index_buffer(QOpenGLBuffer::IndexBuffer)
+    index_buffer(QOpenGLBuffer::IndexBuffer),
+    linev_buffer(QOpenGLBuffer::VertexBuffer),
+    linec_buffer(QOpenGLBuffer::VertexBuffer),
+    linex_buffer(QOpenGLBuffer::IndexBuffer)
 {
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
@@ -18,7 +21,7 @@ MyOpenGLWidget::MyOpenGLWidget(QWidget *parent) :
     setFormat(format);
 
     connect(&timer, &QTimer::timeout, this, &MyOpenGLWidget::onTimer);
-    timer.start(60);
+    timer.start(1);
 }
 
 void MyOpenGLWidget::initializeGL() {
@@ -31,44 +34,39 @@ void MyOpenGLWidget::initializeGL() {
     initView();
     initProgram();
 }
-QVector3D colorFromMass(unsigned int mass){ //prototype realization
-    if(mass<1500)
+QVector3D colorFromMass(double mass){ //prototype realization
+    if(mass<150000000)
         return QVector3D(1.0f,1.0f,1.0f);
-    if(mass<3000)
+    if(mass<3000000000)
         return QVector3D(1.0f,0.5f,0.0f);
-    if(mass<4500)
+    if(mass<45000000000)
         return QVector3D(1.0f,0.0f,0.0f);
-    if(mass<6000)
+    if(mass<600000000000)
         return QVector3D(0.5f,0.0f,0.5f);
-    if(mass<8500)
+    if(mass<8500000000000)
         return QVector3D(0.0f,0.0f,1.0f);
     return QVector3D(1.0f,1.0f,1.0f);
 }
 void MyOpenGLWidget::initProgram() {
-    float a[3];
-    numOfVectors=120000;
-    srand(time(0));
+    std::ifstream in("C://ssd.sccc//N-Body//source//visualizer//in.txt");
+    in>>numOfVectors;
+    computer = getInstanceOf();
 
     vertices = new QVector3D[numOfVectors] () ;
-    speed = new QVector3D[numOfVectors] () ;
-
     QVector3D *colors = new QVector3D[numOfVectors] () ;
-    unsigned int *mass = new unsigned int[numOfVectors] ();
     unsigned int *points = new unsigned int[numOfVectors] ();
+    std::shared_ptr<Particle> parts(new Particle[numOfVectors]);
 
-    for(unsigned int i =0; i<numOfVectors; i++){ //some data creating
-        for(int j =0; j<3; j++){
-            a[j]=(float)(rand()/(RAND_MAX/1000.0)-500.0);
-        }
-        vertices[i]=QVector3D(a[0],a[1],a[2]);
-        speed[i]=QVector3D(a[0]/50,a[1]/50,a[2]/50);
-        mass[i]=(float)(rand()/(RAND_MAX/10000));
-
-        colors[i]=colorFromMass(mass[i]);
-        points[i]=i;
+    for(unsigned int i = 0; i <numOfVectors; ++i){
+            double mass, x, y, z, vx, vy, vz;
+            in >> mass >> x >> y >> z >> vx >> vy >> vz;
+            parts.get()[i] = Particle(mass, x, y, z, vx, vy, vz);
+            colors[i]=colorFromMass(mass);
+            points[i]=i;
+            std::cout << parts.get()[i] << std::endl;
     }
-
-    num_of_indices = static_cast<int>(numOfVectors);
+    in.close();
+    computer->init(parts, numOfVectors);
     program = std::make_shared<QOpenGLShaderProgram>();
     program->addShaderFromSourceFile(QOpenGLShader::Vertex, "shaders/basic.vert");
     program->addShaderFromSourceFile(QOpenGLShader::Fragment, "shaders/basic.frag");
@@ -105,8 +103,34 @@ void MyOpenGLWidget::initProgram() {
     index_buffer.allocate(points, static_cast<int>(numOfVectors*sizeof(points)));
 
     vao.release();
+
+    lao.create();
+    lao.bind();
+    const std::vector<QVector3D> xyz = {QVector3D(0.0f,0.0f,0.0f),QVector3D(1.0f,0.0f,0.0f),QVector3D(0.0f,1.0f,0.0f),QVector3D(0.0f,0.0f,1.0f) };
+
+    linev_buffer.create();
+    linev_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    linev_buffer.bind();
+    linev_buffer.allocate(xyz.data(), static_cast<int>((4*sizeof(QVector3D))));
+    program->enableAttributeArray(v_loc);
+    program->setAttributeBuffer(v_loc, GL_FLOAT, 0, 3);
+
+    linec_buffer.create();
+    linec_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    linec_buffer.bind();
+    linec_buffer.allocate(xyz.data(), static_cast<int>((4*sizeof(QVector3D))));
+    program->enableAttributeArray(c_loc);
+    program->setAttributeBuffer(c_loc, GL_FLOAT, 0, 3);
+
+    std::vector<int> lin = {0,1,0,2,0,3};
+
+    linex_buffer.create();
+    linex_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    linex_buffer.bind();
+    linex_buffer.allocate(lin.data(), static_cast<int>((3*sizeof(QVector3D))));
+
+    lao.release();
     program->release();
-    delete [] mass;
     delete [] points;
 }
 
@@ -139,25 +163,30 @@ void MyOpenGLWidget::paintGL() {
 
     program->bind();
 
-    // Apply rotation.
     view_matrix.setToIdentity();
     const auto center = QVector3D(0.0f, 0.0f, 0.0f);
-    const auto up = QVector3D(0.0f, 1.0f, 0.0f);
+    const auto up = QVector3D(0.0f, 0.0f, 1.0f);
     view_matrix.lookAt(eye, center, up);
 
     QMatrix4x4 rotate;
-
     rotate.rotate(xrotation_angle, QVector3D(1.0f, 0.0f, 0.0f));
     rotate.rotate(yrotation_angle, QVector3D(0.0f, 1.0f, 0.0f));
+    rotate.rotate(zrotation_angle, QVector3D(0.0f, 0.0f, 1.0f));
+
     const auto mvp_loc = program->uniformLocation("MVP");
     program->setUniformValue(mvp_loc, projection_matrix*view_matrix*rotate*model_matrix);
     const auto eye_loc = program->uniformLocation("eye");
     program->setUniformValue(eye_loc, eye);
 
-    // Draw the cube with triangles.
+    lao.bind();
+    gl->glEnable(GL_LINE_SMOOTH);
+    gl->glLineWidth(3);
+    gl->glDrawElements(GL_LINES, static_cast<int>(6), GL_UNSIGNED_INT, nullptr);
+    lao.release();
+
     vao.bind();
     gl->glEnable(GL_PROGRAM_POINT_SIZE);
-    gl->glDrawElements(GL_POINTS, num_of_indices, GL_UNSIGNED_INT, nullptr);
+    gl->glDrawElements(GL_POINTS, static_cast<int>(numOfVectors), GL_UNSIGNED_INT, nullptr);
     vao.release();
 
     program->release();
@@ -168,6 +197,9 @@ void MyOpenGLWidget::mousePressEvent(QMouseEvent *me){
         scoord[0]=me->x();
         scoord[1]=me->y();
     }
+}
+void MyOpenGLWidget::mouseReleaseEvent(QMouseEvent *me){
+    pressedButton=false;
 }
 void MyOpenGLWidget::mouseMoveEvent(QMouseEvent *me){
     if(pressedButton){
@@ -186,17 +218,34 @@ void MyOpenGLWidget::mouseMoveEvent(QMouseEvent *me){
 }
 void MyOpenGLWidget::wheelEvent(QWheelEvent *qe){
     if(qe->angleDelta().ry()>0)
-        eye+=QVector3D(5.0f,5.0f,5.0f);
+        eye+=QVector3D(2.0f,0.0f,0.0f);
     else
-        eye-=QVector3D(5.0f,5.0f,5.0f);
+        eye-=QVector3D(2.0f,0.0f,0.0f);
     update();
 
 }
-
-void MyOpenGLWidget::onTimer() {
-    for(unsigned int i =0; i<numOfVectors; i++){
-        vertices[i]+=speed[i];
+void MyOpenGLWidget::keyPressEvent(QKeyEvent *ke){
+    if(ke->key()==Qt::Key_1){
+        xrotation_angle = 0.0f;
+        yrotation_angle = 90.0f;
+        zrotation_angle = 0.0f;
+        update();
     }
+    if(ke->key()==Qt::Key_2){
+        xrotation_angle = 0.0f;
+        yrotation_angle = 0.0f;
+        zrotation_angle = -90.0f;
+        update();
+    }
+    if(ke->key()==Qt::Key_3){
+        xrotation_angle = 0.0f;
+        yrotation_angle = 0.0f;
+        zrotation_angle = 0.0f;
+        update();
+    }
+}
+void MyOpenGLWidget::onTimer() {
+    fromParticleM(computer->iterate());
     vao.bind();
     vertex_buffer.bind();
     vertex_buffer.write(NULL,vertices, static_cast<int>(numOfVectors*sizeof(QVector3D)));
@@ -205,5 +254,12 @@ void MyOpenGLWidget::onTimer() {
 }
 MyOpenGLWidget::~MyOpenGLWidget(){
     delete[] vertices;
-    delete[] speed;
+}
+QVector3D MyOpenGLWidget::fromParticle(const Particle &part){
+    return QVector3D(part.getX(),part.getY(),part.getZ());
+}
+void MyOpenGLWidget::fromParticleM(const Particle *part){
+    for(unsigned int i = 0; i<numOfVectors; i++)
+        vertices[i]=fromParticle(part[i]);
+
 }
