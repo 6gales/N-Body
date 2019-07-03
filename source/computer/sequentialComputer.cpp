@@ -7,12 +7,16 @@ void SequentialComputer::fillForces()
 	{
 		for(size_t j = i; j < N; ++j)
 		{
+<<<<<<< HEAD
 			if(i == j)
 			{
 				forces[i][j] = 0.0;
 				continue;
 			}
 
+=======
+			if(i == j) forces[i][j] = 0.0;
+>>>>>>> server
 
 			Vector3D delta = (parts.get()[i].coords - parts.get()[j].coords);
 
@@ -41,6 +45,7 @@ Particle* SequentialComputer::iterate()
 	fillForces();
 	for(size_t i = 0; i < N; ++i)
 	{
+<<<<<<< HEAD
 		for(size_t j = 0; j < N; ++j)
 		{
 			std::cout << forces[i][j] << " ";
@@ -56,6 +61,12 @@ Particle* SequentialComputer::iterate()
 		for(size_t j = 0; j < N; ++j)
 		{
 			F += forces[j][i];
+=======
+		Vector3D F;
+		for(size_t j = 0; j < N; ++j)
+		{
+			F += forces[i][j];
+>>>>>>> server
 		}
 		Vector3D acc = F * (1.0 / parts.get()[i].mass);
 		parts.get()[i].vel = parts.get()[i].vel + acc * dt;
