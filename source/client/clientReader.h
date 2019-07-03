@@ -1,0 +1,8 @@
+//
+// Created by maksimych on 03.07.19.
+//
+
+#ifndef SCHOOL_SERVER_CLIENTREADER_H
+#define SCHOOL_SERVER_CLIENTREADER_H
+
+#endif //SCHOOL_SERVER_CLIENTREADER_H

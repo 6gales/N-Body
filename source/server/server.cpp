@@ -4,6 +4,7 @@
 #include <queue>
 #include <iostream>
 #include "../computer/sequentialComputer.h"
+#include "serverReader.hpp"
 
 using namespace boost::asio::ip;
 
@@ -12,8 +13,12 @@ const Particle* parse_message(const std::string &msg, std::shared_ptr<Computer> 
 std::string construct_data_message(const Particle* particles, size_t count);
 
 std::string read_message(tcp::socket &sock) {
+
     boost::asio::streambuf buf;
-    boost::asio::read_until(sock, buf, "\r\n");
+    ServerReader ServerReader{buf};
+    boost::asio::read(sock, buf, [&ServerReader](const boost::system::error_code &err_code, size_t bytes) -> size_t {
+        return ServerReader.check_count_objects(err_code, bytes);
+    });
     std::string msg{boost::asio::buffers_begin(buf.data()), boost::asio::buffers_end(buf.data())};
     return msg;
 }
@@ -82,6 +87,7 @@ private:
         tcp::socket sock;
         std::queue<const Particle*> particles_queue{};
         std::shared_ptr<Computer> computer;
+
     };
 
     void handle(const boost::shared_ptr<Connection> &connection, const boost::system::error_code &error_code) {
