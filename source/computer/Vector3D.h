@@ -1,4 +1,5 @@
 #pragma once
+#include <ostream>
 
 class Vector3D
 {
@@ -65,3 +66,6 @@ Vector3D operator*(double mul, const Vector3D &v);
 Vector3D operator+(const Vector3D &v1, const Vector3D &v2);
 
 Vector3D operator-(const Vector3D &v1, const Vector3D &v2);
+
+
+std::ostream& operator<<(std::ostream &, const Vector3D&);

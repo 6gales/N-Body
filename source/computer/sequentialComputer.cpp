@@ -7,7 +7,12 @@ void SequentialComputer::fillForces()
 	{
 		for(size_t j = i; j < N; ++j)
 		{
-			if(i == j) forces[i][j] = 0.0;
+			if(i == j)
+			{
+				forces[i][j] = 0.0;
+				continue;
+			}
+
 
 			Vector3D delta = (parts.get()[i].coords - parts.get()[j].coords);
 
