@@ -1,5 +1,6 @@
 #pragma once
 #include <ostream>
+#include <math.h>
 
 class Vector3D
 {
@@ -53,7 +54,7 @@ public:
 
 	double module()
 	{
-		return x * x + y * y + z * z;
+		return sqrt(x * x + y * y + z * z);
 	}
 
 };
