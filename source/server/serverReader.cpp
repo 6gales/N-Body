@@ -16,7 +16,7 @@ size_t ServerReader::check_count_objects(const boost::system::error_code &err_co
         isWasCount = true;
         if (count == 0) return 0;
     }
-    if (bytes + offset >= sizeof(float)*7*count) return 0;
+    if (bytes + offset >= sizeof(float)*7*count && isWasCount) return 0;
     offset += bytes;
     return 1;
 }

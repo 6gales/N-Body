@@ -1,7 +1,3 @@
-//
-// Created by maksimych on 02.07.19.
-//
-
 #include <string>
 #include "../computer/abstractComputer.h"
 
@@ -17,9 +13,9 @@ std::string construct_data_message(const Particle* particles, size_t count) {
         float x = particles[0].getX();
         float y = particles[0].getY();
         float z = particles[0].getZ();
-        send_msg.append(reinterpret_cast<const char*>(&(mass)));
-        send_msg.append(reinterpret_cast<const char*>(&(x)));
-        send_msg.append(reinterpret_cast<const char*>(&(y)));
-        send_msg.append(reinterpret_cast<const char*>(&(z)));
+        send_msg.append(reinterpret_cast<const char*>(&(mass)), 4);
+        send_msg.append(reinterpret_cast<const char*>(&(x)), 4);
+        send_msg.append(reinterpret_cast<const char*>(&(y)), 4);
+        send_msg.append(reinterpret_cast<const char*>(&(z)), 4);
     }
 }

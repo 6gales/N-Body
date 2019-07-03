@@ -1,7 +1,3 @@
-//
-// Created by maksimych on 02.07.19.
-//
-
 #include <string>
 #include <memory>
 #include <cstring>
@@ -14,13 +10,7 @@ const Particle* start_message(const std::string &msg, std::shared_ptr<Computer> 
     std::string particles_info = msg.substr(13, msg.size()-13);
     std::shared_ptr<Particle> particles(new Particle[count_particles]);
     for (size_t i = 0; i < count_particles; ++i) {
-        float mass;
-        float x;
-        float y;
-        float z;
-        float v_x;
-        float v_y;
-        float v_z;
+        float mass, x, y, z, v_x, v_y, v_z;
         memcpy(&mass, particles_info.c_str() + i*7, sizeof(float));
         memcpy(&x, particles_info.c_str() + (i+1)*7, sizeof(float));
         memcpy(&y, particles_info.c_str() + (i+2)*7, sizeof(float));

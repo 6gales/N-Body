@@ -14,4 +14,4 @@ public:
 
     size_t check_count_objects(const boost::system::error_code &err_code, size_t bytes);
 };
-#endif SCHOOL_SERVER_CLIENTREADER_H
+#endif //SCHOOL_SERVER_CLIENTREADER_H
