@@ -40,11 +40,9 @@ public:
             while (true) {
                 std::unique_lock<std::mutex> lck(mutex);
                 while (isEmptyQueue) cond_var.wait(lck);
-                mutex.lock();
                 const auto msg = msg_queue.front();
                 msg_queue.pop();
                 if (msg_queue.empty()) isEmptyQueue = true;
-                mutex.unlock();
                 write_message(this->socket(), msg);
             }
         }};
@@ -60,8 +58,8 @@ public:
     }
 
     void start(std::ifstream &data_file) {
-        std::string start_message;
-        start_message.append("START");
+        std::string start_message{};
+        start_message.append("START", 5);
         size_t count = 0;
         start_message.append(reinterpret_cast<const char*>(&count), 8);
         while (data_file.good()) {
@@ -72,14 +70,14 @@ public:
                 break;
             }
 
-            start_message.append(part_msg);
+            start_message.append(part_msg, part_msg.size());
             ++count;
         }
 
         for (size_t i = 0; i < 8; ++i) {
             start_message[5+i] = (char)(count >> ((7-i)*8));
         }
-
+        std::unique_lock<std::mutex> lck(mutex);
         msg_queue.push(start_message);
         isEmptyQueue = true;
         cond_var.notify_one();
@@ -87,12 +85,14 @@ public:
     }
 
     void stop() {
+        std::unique_lock<std::mutex> lck(mutex);
         msg_queue.push(std::string{"STOP "});
         isEmptyQueue = true;
         cond_var.notify_one();
     }
 
     void next() {
+        std::unique_lock<std::mutex> lck(mutex);
         msg_queue.push(std::string{"NEXT "});
         isEmptyQueue = true;
         cond_var.notify_one();
@@ -110,8 +110,8 @@ private:
 int main(int argc, char* argv[]) {
 
     if (argc < 3) {
-        //TODO bad arguments
-        return -1;
+        std::cerr << R"(Bad argument for connect to server, pattern: "ip" "port" "file name".)" << std::endl;
+        return 0;
     }
 
     try {

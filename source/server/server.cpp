@@ -56,6 +56,7 @@ private:
                     if (result == nullptr) {
                         //TODO break arrays
                     } else {
+                        std::unique_lock<std::mutex> lck(mutex);
                         particles_queue.push(result);
                         isEmptyQueue = false;
                         cond_var.notify_one();
@@ -69,11 +70,9 @@ private:
                 while (true) {
                     std::unique_lock<std::mutex> lck(mutex);
                     while (isEmptyQueue) cond_var.wait(lck);
-                    mutex.lock();
                     const auto msg = construct_data_message(particles_queue.front(), computer->getSize());
                     particles_queue.pop();
                     if (particles_queue.empty()) isEmptyQueue = true;
-                    mutex.unlock();
                     write_message(this->socket(), msg);
                 }
             });

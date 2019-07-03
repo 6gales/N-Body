@@ -1,7 +1,3 @@
-//
-// Created by maksimych on 02.07.19.
-//
-
 #include <string>
 #include "../computer/abstractComputer.h"
 
