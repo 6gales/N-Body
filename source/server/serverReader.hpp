@@ -6,7 +6,6 @@
 class ServerReader {
 private:
     boost::asio::streambuf& buf;
-    size_t offset = 0;
     bool isWasCommand = false;
     bool isStart = false;
     bool isWasCount = false;
