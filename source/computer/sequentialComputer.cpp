@@ -41,10 +41,21 @@ Particle* SequentialComputer::iterate()
 	fillForces();
 	for(size_t i = 0; i < N; ++i)
 	{
+		for(size_t j = 0; j < N; ++j)
+		{
+			std::cout << forces[i][j] << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	std::cout << std::endl;
+
+	for(size_t i = 0; i < N; ++i)
+	{
 		Vector3D F;
 		for(size_t j = 0; j < N; ++j)
 		{
-			F += forces[i][j];
+			F += forces[j][i];
 		}
 		Vector3D acc = F * (1.0 / parts.get()[i].mass);
 		parts.get()[i].vel = parts.get()[i].vel + acc * dt;
