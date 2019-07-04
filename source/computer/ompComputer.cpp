@@ -49,7 +49,7 @@ const std::vector<Particle> &ompComputer::iterate()
 		Vector3D F;
 		for(size_t j = 0; j < N; ++j)
 		{
-			F += forces[j][i];
+			F -= forces[i][j];
 		}
 		Vector3D acc = F * (1.0 / particleVectors[previous][i].mass);
 		particleVectors[current][i].vel = particleVectors[previous][i].vel + acc * dt;
