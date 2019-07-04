@@ -71,4 +71,3 @@ void Server::Connection::start() {
     });
     send_thread.detach();
 }
-
