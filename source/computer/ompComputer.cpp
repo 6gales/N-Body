@@ -13,26 +13,20 @@ void ompComputer::fillForces()
 				continue;
 			}
 
-			Vector3D delta = (parts.get()[i].coords - parts.get()[j].coords);
-
+			Vector3D delta = (particleVectors[previous][i].coords - particleVectors[previous][j].coords);
 			double mod = delta.module();
-			if (mod != 0.0)
-			{
-				forces[i][j] = (gravity * parts.get()[i].mass * parts.get()[j].mass / mod / mod / mod) * delta;
-				forces[j][i] = (-1) * forces[i][j];
-			}
-			else
-			{
-				forces[i][j] = 0;
-				forces[j][i] = 0;
-			}
+
+			forces[i][j] = gravity * particleVectors[previous][i].mass * particleVectors[previous][j].mass
+						   / (mod * mod * mod + 1.0e-8) * delta;
+			forces[j][i] = (-1) * forces[i][j];
 		}
 	}
 }
 
-void ompComputer::init(std::shared_ptr <Particle> _parts, size_t _N)
+void ompComputer::init(std::vector<Particle> &particles, size_t _N)
 {
-	parts = _parts;
+	particleVectors[previous] = particles;
+	particleVectors[current] = particles;
 	N = _N;
 	forces = new Vector3D*[N];
 
@@ -45,7 +39,7 @@ void ompComputer::init(std::shared_ptr <Particle> _parts, size_t _N)
 
 
 
-Particle* ompComputer::iterate()
+const std::vector<Particle> &ompComputer::iterate()
 {
 	fillForces();
 
@@ -57,12 +51,16 @@ Particle* ompComputer::iterate()
 		{
 			F += forces[j][i];
 		}
-		Vector3D acc = F * (1.0 / parts.get()[i].mass);
-		parts.get()[i].vel = parts.get()[i].vel + acc * dt;
-		parts.get()[i].coords = parts.get()[i].coords + parts.get()[i].vel * dt;
+		Vector3D acc = F * (1.0 / particleVectors[previous][i].mass);
+		particleVectors[current][i].vel = particleVectors[previous][i].vel + acc * dt;
+		particleVectors[current][i].coords = particleVectors[previous][i].coords
+											 + particleVectors[previous][i].vel * dt;
 	}
 
-	return parts.get();
+	previous ^= 1;
+	current ^= 1;
+
+	return particleVectors[previous];
 }
 
 
