@@ -30,6 +30,7 @@ std::vector<Particle> start_message(const std::string &msg, std::shared_ptr<Comp
 }
 
 std::vector<Particle> stop_message(const std::string &msg, std::shared_ptr<Computer> computer) {
+    return std::vector<Particle>{};
     //TODO close socket and stop sending message
 }
 

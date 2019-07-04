@@ -34,7 +34,7 @@ private:
         tcp::socket sock;
         std::queue<std::vector<Particle>> particles_queue{};
         std::shared_ptr<Computer> computer;
-
+        bool isNeedClose = false;
     };
 
     void handle(std::shared_ptr<Connection> connection, const boost::system::error_code &error_code);
