@@ -29,6 +29,9 @@ private:
     bool isEmptyQueue = true;
     std::queue<std::string> msg_queue{};
     std::condition_variable cond_var;
+    bool isNeedClose = false;
+
+    void close_threads();
 };
 
 #endif //SCHOOL_SERVER_CLIENT_HPP

@@ -9,9 +9,6 @@ size_t ClientReader::check_count_objects(const boost::system::error_code &err_co
         isWasCount = true;
         if (count == 0) return 0;
     }
-    if (bytes >= (sizeof(float)*4*count + sizeof(size_t)) && isWasCount) {
-        std::cerr << count;
-        return 0;
-    }
+    if (bytes >= (sizeof(float)*4*count + sizeof(size_t)) && isWasCount) return 0;
     return 1;
 }

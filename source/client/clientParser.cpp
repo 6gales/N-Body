@@ -50,15 +50,12 @@ std::vector<Particle> parse_msg_from_server(const std::string &msg) {
     std::string particles_info = msg.substr(8);
     std::vector<Particle> particles{count_particles};
     for (size_t i = 0; i < count_particles; ++i) {
-        float mass, x, y, z, v_x, v_y, v_z;
-        memcpy(&mass, particles_info.c_str() + (i*7 * 4), sizeof(float));
-        memcpy(&x, particles_info.c_str() + ((i*7 + 1) * 4), sizeof(float));
-        memcpy(&y, particles_info.c_str() + ((i*7 + 2) * 4), sizeof(float));
-        memcpy(&z, particles_info.c_str() + ((i*7 + 3) * 4), sizeof(float));
-        memcpy(&v_x, particles_info.c_str() + ((i*7 + 4) * 4), sizeof(float));
-        memcpy(&v_y, particles_info.c_str() + ((i*7 + 5) * 4), sizeof(float));
-        memcpy(&v_z, particles_info.c_str() + ((i*7 + 6) * 4), sizeof(float));
-        particles[i] = {mass, x, y, z, v_x, v_y, v_z};
+        float mass, x, y, z;
+        memcpy(&mass, particles_info.c_str() + (i*4 * 4), sizeof(float));
+        memcpy(&x, particles_info.c_str() + ((i*4 + 1) * 4), sizeof(float));
+        memcpy(&y, particles_info.c_str() + ((i*4 + 2) * 4), sizeof(float));
+        memcpy(&z, particles_info.c_str() + ((i*4 + 3) * 4), sizeof(float));
+        particles[i] = {mass, x, y, z, 0, 0, 0};
     }
 
     return particles;
