@@ -43,11 +43,24 @@ void Server::handle(std::shared_ptr<Connection> connection, const boost::system:
 void Server::Connection::start() {
     auto ptr = this->shared_from_this();
     std::thread recv_thread([this, ptr] (){
-        while (true) {
-            const std::string msg = read_message(this->socket());
+        while (!isNeedClose) {
+            std::string msg;
+            try {
+                msg = read_message(this->socket());
+            } catch (const std::exception& ex) {
+                std::cerr << ex.what() << "Close connection" << std::endl;
+                isNeedClose = true;
+                std::unique_lock<std::mutex> lck(mutex);
+                isEmptyQueue = false;
+                cond_var.notify_one();
+                continue;
+            }
             auto result = parse_message(msg, computer);
             if (result.empty()) {
-                //TODO break arrays
+                isNeedClose = true;
+                std::unique_lock<std::mutex> lck(mutex);
+                isEmptyQueue = false;
+                cond_var.notify_one();
             } else {
                 std::unique_lock<std::mutex> lck(mutex);
                 particles_queue.push(result);
@@ -60,9 +73,10 @@ void Server::Connection::start() {
     recv_thread.detach();
 
     std::thread send_thread([this, ptr] () {
-        while (true) {
+        while (!isNeedClose) {
             std::unique_lock<std::mutex> lck(mutex);
             while (isEmptyQueue) cond_var.wait(lck);
+            if (isNeedClose) break;
             const auto msg = convert_particles_to_msg(particles_queue.front());
             particles_queue.pop();
             if (particles_queue.empty()) isEmptyQueue = true;
@@ -71,4 +85,3 @@ void Server::Connection::start() {
     });
     send_thread.detach();
 }
-

@@ -12,7 +12,7 @@ size_t parse_file(std::istream &data_file, std::string &start_message);
 
 std::vector<Particle> parse_msg_from_server(const std::string &msg);
 
-void printParticles(std::vector<Particle> particles, size_t count);
+void printParticles(const std::vector<Particle> &particles);
 
 std::string read_message(tcp::socket &sock) {
     boost::asio::streambuf buf;
@@ -36,11 +36,13 @@ tcp::socket& Client::socket() {
 void Client::connect(const std::string host, const unsigned short port) {
     tcp::endpoint ep{address::from_string(host), port};
     sock.connect(ep);
+    auto ptr = this->shared_from_this();
 
-    std::thread write_thread{[this]() {
-        while (true) {
+    std::thread write_thread{[ptr, this]() {
+        while (!isNeedClose) {
             std::unique_lock<std::mutex> lck(mutex);
             while (isEmptyQueue) cond_var.wait(lck);
+            if (isNeedClose && msg_queue.empty()) break;
             const auto msg = msg_queue.front();
             msg_queue.pop();
             if (msg_queue.empty()) isEmptyQueue = true;
@@ -49,14 +51,23 @@ void Client::connect(const std::string host, const unsigned short port) {
     }};
     write_thread.detach();
 
-    std::thread read_thread{[this]() {
-        while (true) {
-            const auto msg = read_message(this->socket());
-            std::cerr << msg.size() << std::endl;
-            std::cerr << "aaa" << std::endl;
+    std::thread read_thread{[ptr, this]() {
+        while (!isNeedClose) {
+            std::string msg;
+            try {
+                msg = read_message(this->socket());
+            } catch (std::exception &ex) {
+                std::cerr << "Error while read from socket: " << ex.what() << std::endl;
+                isNeedClose = true;
+                std::unique_lock<std::mutex> lck(mutex);
+                isEmptyQueue = false;
+                cond_var.notify_one();
+                continue;
+            }
             auto particles = parse_msg_from_server(msg);
-            printParticles(particles, count);
+            printParticles(particles);
             //TODO convert msg to good format for visualisator
+            //TODO maybe call method 'next'
         }
     }};
     read_thread.detach();
@@ -78,6 +89,7 @@ void Client::stop() {
     msg_queue.push(std::string{"STOP "});
     isEmptyQueue = false;
     cond_var.notify_one();
+    isNeedClose = true;
 }
 
 void Client::next() {

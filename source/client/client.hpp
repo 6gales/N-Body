@@ -6,7 +6,7 @@
 
 using namespace boost::asio::ip;
 
-class Client {
+class Client : public std::enable_shared_from_this<Client> {
 public:
 
     explicit Client(boost::asio::io_service& io_service) : io_service(io_service), sock{io_service} {}
@@ -29,6 +29,9 @@ private:
     bool isEmptyQueue = true;
     std::queue<std::string> msg_queue{};
     std::condition_variable cond_var;
+    bool isNeedClose = false;
+
+    void close_threads();
 };
 
 #endif //SCHOOL_SERVER_CLIENT_HPP
