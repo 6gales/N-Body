@@ -1,13 +1,13 @@
-#include "sequentialComputer.h"
+w#include "sequentialComputer.h"
 
 
 void SequentialComputer::fillForces()
 {
 	for(size_t i = 0; i < N; ++i)
 	{
-		for(size_t j = i; j < N; ++j)
+		for (size_t j = i; j < N; ++j)
 		{
-			if(i == j)
+			if (i == j)
 			{
 				forces[i][j] = 0.0;
 				continue;
@@ -16,8 +16,16 @@ void SequentialComputer::fillForces()
 
 			Vector3D delta = (parts.get()[i].coords - parts.get()[j].coords);
 			double mod = delta.module();
-			forces[i][j] = (gravity * parts.get()[i].mass * parts.get()[j].mass / mod / mod / mod) * delta;
-			forces[j][i] = (-1) * forces[i][j];
+			if (!mod)
+			{
+				forces[i][j] = (gravity * parts.get()[i].mass * parts.get()[j].mass / mod / mod / mod) * delta;
+				forces[j][i] = (-1) * forces[i][j];
+			}
+			else
+			{
+				forces[i][j] = 0;
+				forces[j][i] = 0;
+			}
 		}
 	}
 }
