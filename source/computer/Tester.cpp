@@ -9,7 +9,7 @@ int main()
 	std::ifstream in("in.txt");
 	std::ofstream out("out.txt");
 
-	Computer* computer = getInstanceOf();
+	Computer* computer = new ompComputer();
 	int N;
 	in >> N;
 
