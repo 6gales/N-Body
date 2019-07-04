@@ -3,9 +3,9 @@
 
 void SequentialComputer::fillForces()
 {
-	for(size_t i = 0; i < N; ++i)
+	for(ull i = 0; i < N; ++i)
 	{
-		for (size_t j = i; j < N; ++j)
+		for (ull j = i; j < N; ++j)
 		{
 			if (i == j)
 			{
@@ -30,7 +30,7 @@ void SequentialComputer::init(std::vector<Particle> &particles, ull _N)
 	particleVectors[current] = particles;
 	N = _N;
 	forces = new Vector3D*[N];
-	for(size_t i = 0; i < N; ++i)
+	for(ull i = 0; i < N; ++i)
 	{
 		forces[i] = new Vector3D[N];
 	}
@@ -44,10 +44,10 @@ const std::vector<Particle> &SequentialComputer::iterate()
 
 	std::cout << std::endl;
 
-	for(size_t i = 0; i < N; ++i)
+	for(ull i = 0; i < N; ++i)
 	{
 		Vector3D F;
-		for(size_t j = 0; j < N; ++j)
+		for(ull j = 0; j < N; ++j)
 		{
 			F -= forces[i][j];
 		}
@@ -66,7 +66,7 @@ const std::vector<Particle> &SequentialComputer::iterate()
 
 SequentialComputer::~SequentialComputer()
 {
-	for(size_t i = 0; i < N; ++i)
+	for(ull i = 0; i < N; ++i)
 	{
 		delete[] forces[i];
 	}
