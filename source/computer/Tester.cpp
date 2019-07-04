@@ -9,7 +9,7 @@ int main()
 	std::ifstream in("in.txt");
 	std::ofstream out("out.txt");
 
-	Computer* computer = new ompComputer();
+	Computer* computer = new SequentialComputer();//new ompComputer(4);
 	int N;
 	in >> N;
 
