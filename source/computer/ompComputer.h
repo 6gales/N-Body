@@ -16,7 +16,7 @@ public:
 		omp_set_num_threads(numThreads);
 		forces = nullptr;
 	}
-	void init(std::vector<Particle> &, size_t);
+	void init(std::vector<Particle> &, ull);
 	const std::vector<Particle> &iterate();
 	~ompComputer();
 };

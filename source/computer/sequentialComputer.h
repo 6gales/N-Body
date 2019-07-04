@@ -10,7 +10,7 @@ private:
 	void fillForces();
 
 public:
-	void init(std::vector<Particle> &, size_t);
+	void init(std::vector<Particle> &, ull);
 	const std::vector<Particle> &iterate();
 	~SequentialComputer();
 };
