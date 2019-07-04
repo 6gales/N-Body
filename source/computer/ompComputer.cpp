@@ -23,7 +23,7 @@ void ompComputer::fillForces()
 	}
 }
 
-void ompComputer::init(std::vector<Particle> &particles, size_t _N)
+void ompComputer::init(std::vector<Particle> &particles, ull _N)
 {
 	particleVectors[previous] = particles;
 	particleVectors[current] = particles;
