@@ -13,15 +13,15 @@ int main()
 	int N;
 	in >> N;
 
-	std::shared_ptr<Particle> parts(new Particle[N]);
+	std::vector<Particle> parts(N);
 
 
 	for(int i = 0; i < N; ++i)
 	{
 		double mass, x, y, z, vx, vy, vz;
 		in >> mass >> x >> y >> z >> vx >> vy >> vz;
-		parts.get()[i] = Particle(mass, x, y, z, vx, vy, vz);
-		std::cout << parts.get()[i] << std::endl;
+		parts[i] = Particle(mass, x, y, z, vx, vy, vz);
+		std::cout << parts[i] << std::endl;
 	}
 	in.close();
 
@@ -30,7 +30,7 @@ int main()
 	for(int iter = 0; iter < 1000; ++iter)
 	{
 		out << "====================ITERATION "<< iter <<"====================="<< std::endl;
-		Particle* buff = computer->iterate();
+		auto buff = computer->iterate();
 		for(int i = 0; i < N; ++i)
 		{
 			//std::cout << buff[i] << std::endl;
