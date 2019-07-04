@@ -19,13 +19,13 @@ int main(int argc, char* argv[]) {
 
         boost::asio::io_service io_service;
 
-        Client client{io_service};
+        std::shared_ptr<Client> client{new Client{io_service}};
 
-        client.connect(host, port);
+        client->connect(host, port);
 
-        client.start(data_file);
+        client->start(data_file);
 
-        while (true) {}
+        while (true) { }
 
     } catch (const std::exception &ex) {
         std::cerr << "Error: " << ex.what();

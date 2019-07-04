@@ -36,8 +36,9 @@ tcp::socket& Client::socket() {
 void Client::connect(const std::string host, const unsigned short port) {
     tcp::endpoint ep{address::from_string(host), port};
     sock.connect(ep);
+    auto ptr = this->shared_from_this();
 
-    std::thread write_thread{[this]() {
+    std::thread write_thread{[ptr, this]() {
         while (true) {
             std::unique_lock<std::mutex> lck(mutex);
             while (isEmptyQueue) cond_var.wait(lck);
@@ -49,11 +50,9 @@ void Client::connect(const std::string host, const unsigned short port) {
     }};
     write_thread.detach();
 
-    std::thread read_thread{[this]() {
+    std::thread read_thread{[ptr, this]() {
         while (true) {
             const auto msg = read_message(this->socket());
-            std::cerr << msg.size() << std::endl;
-            std::cerr << "aaa" << std::endl;
             auto particles = parse_msg_from_server(msg);
             printParticles(particles, count);
             //TODO convert msg to good format for visualisator
