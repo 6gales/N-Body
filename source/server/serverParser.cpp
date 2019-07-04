@@ -5,12 +5,15 @@
 #include <iostream>
 #include "../computer/abstractComputer.h"
 
+using ull = unsigned long long;
+
 std::vector<Particle> start_message(const std::string &msg, std::shared_ptr<Computer> computer) {
-    size_t count_particles = ((size_t)msg.at(0) << 56) | ((size_t)msg.at(1) << 48) | ((size_t)msg.at(2) << 40) | ((size_t)msg.at(3) << 32)
-                             | ((size_t)msg.at(4) << 24) | ((size_t)msg.at(5) << 16) | ((size_t)msg.at(6) << 8) | (msg.at(7));
+    ull count_particles = (((ull)msg.at(0) << 56) & 0xFF00000000000000) | (((ull)msg.at(1) << 48) & 0x00FF000000000000) | (((ull)msg.at(2) << 40) & 0x0000FF0000000000)
+                            | (((ull)msg.at(3) << 32) & 0x000000FF00000000) | (((ull)msg.at(4) << 24) & 0x00000000FF000000) | (((ull)msg.at(5) << 16) & 0x0000000000FF0000)
+                            | (((ull)msg.at(6) << 8) & 0x000000000000FF00) | ((ull)msg.at(7) & 0x00000000000000FF);
     std::string particles_info = msg.substr(8);
     std::vector<Particle> particles{count_particles};
-    for (size_t i = 0; i < count_particles; ++i) {
+    for (ull i = 0; i < count_particles; ++i) {
         float mass, x, y, z, v_x, v_y, v_z;
         memcpy(&mass, particles_info.c_str() + i*7 * 4, sizeof(float));
         memcpy(&x, particles_info.c_str() + (i*7 + 1) * 4, sizeof(float));
@@ -21,12 +24,9 @@ std::vector<Particle> start_message(const std::string &msg, std::shared_ptr<Comp
         memcpy(&v_z, particles_info.c_str() + (i*7 + 6) * 4, sizeof(float));
         particles[i] = {mass, x, y, z, v_x, v_y, v_z};
     }
-//    computer->init(particles, count_particles);
+    computer->init(particles, count_particles);
 
-//    return computer->iterate();
-
-    return particles;
-
+    return computer->iterate();
 }
 
 std::vector<Particle> stop_message(const std::string &msg, std::shared_ptr<Computer> computer) {
@@ -35,7 +35,7 @@ std::vector<Particle> stop_message(const std::string &msg, std::shared_ptr<Compu
 }
 
 std::vector<Particle> next_message(const std::string &msg, std::shared_ptr<Computer> computer) {
-//    return computer->iterate();
+    return computer->iterate();
 }
 
 std::vector<Particle> parse_message(const std::string &msg, std::shared_ptr<Computer> computer) {

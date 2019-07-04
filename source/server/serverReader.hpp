@@ -1,5 +1,4 @@
-#ifndef SCHOOL_SERVER_SERVERREADER_HPP
-#define SCHOOL_SERVER_SERVERREADER_HPP
+#pragma once
 
 #include <boost/asio.hpp>
 
@@ -9,12 +8,10 @@ private:
     bool isWasCommand = false;
     bool isStart = false;
     bool isWasCount = false;
-    size_t count = 0;
+    unsigned long long count = 0;
 
 public:
     explicit ServerReader(boost::asio::streambuf& buf) : buf(buf) {}
 
     size_t check_count_objects(const boost::system::error_code &err_code, size_t bytes);
 };
-
-#endif //SCHOOL_SERVER_SERVERREADER_HPP
