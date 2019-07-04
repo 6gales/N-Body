@@ -3,9 +3,9 @@
 void ompComputer::fillForces()
 {
 	#pragma omp parallel for schedule(dynamic)
-	for(size_t i = 0; i < N; ++i)
+	for(ull i = 0; i < N; ++i)
 	{
-		for(size_t j = i; j < N; ++j)
+		for(ull j = i; j < N; ++j)
 		{
 			if(i == j)
 			{
@@ -31,7 +31,7 @@ void ompComputer::init(std::vector<Particle> &particles, ull _N)
 	forces = new Vector3D*[N];
 
 	#pragma omp parallel for
-	for(size_t i = 0; i < N; ++i)
+	for(ull i = 0; i < N; ++i)
 	{
 		forces[i] = new Vector3D[N];
 	}
@@ -44,10 +44,10 @@ const std::vector<Particle> &ompComputer::iterate()
 	fillForces();
 
 	#pragma omp parallel for
-	for(size_t i = 0; i < N; ++i)
+	for(ull i = 0; i < N; ++i)
 	{
 		Vector3D F;
-		for(size_t j = 0; j < N; ++j)
+		for(ull j = 0; j < N; ++j)
 		{
 			F -= forces[i][j];
 		}
@@ -67,7 +67,7 @@ const std::vector<Particle> &ompComputer::iterate()
 ompComputer::~ompComputer()
 {
 	#pragma omp parallel for
-	for(size_t i = 0; i < N; ++i)
+	for(ull i = 0; i < N; ++i)
 	{
 		delete[] forces[i];
 	}
