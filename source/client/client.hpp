@@ -1,6 +1,4 @@
-#ifndef SCHOOL_SERVER_CLIENT_HPP
-#define SCHOOL_SERVER_CLIENT_HPP
-
+#pragma once
 #include <boost/asio.hpp>
 #include <queue>
 
@@ -22,16 +20,13 @@ public:
     void next();
 
 private:
-    size_t count = 0;
+    volatile unsigned long long count = 0;
     boost::asio::io_service &io_service;
     tcp::socket sock;
     std::mutex mutex;
-    bool isEmptyQueue = true;
+    volatile bool isEmptyQueue = true;
     std::queue<std::string> msg_queue{};
     std::condition_variable cond_var;
-    bool isNeedClose = false;
+    volatile bool isNeedClose = false;
 
-    void close_threads();
 };
-
-#endif //SCHOOL_SERVER_CLIENT_HPP

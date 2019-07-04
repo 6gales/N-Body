@@ -1,9 +1,8 @@
-#ifndef SCHOOL_SERVER_SERVER_HPP
-#define SCHOOL_SERVER_SERVER_HPP
+#pragma once
 
-#include <boost/asio.hpp>
+#include<boost/asio.hpp>
 #include <queue>
-#include "../computer/abstractComputer.h"
+#include "../computer/ompComputer.h"
 
 using namespace boost::asio::ip;
 
@@ -28,13 +27,13 @@ private:
         void start();
 
     private:
-        bool isEmptyQueue = true;
+        volatile bool isEmptyQueue = true;
         std::mutex mutex;
         std::condition_variable cond_var;
         tcp::socket sock;
         std::queue<std::vector<Particle>> particles_queue{};
-        std::shared_ptr<Computer> computer;
-        bool isNeedClose = false;
+        std::shared_ptr<Computer> computer{new ompComputer{4}};
+        volatile bool isNeedClose = false;
     };
 
     void handle(std::shared_ptr<Connection> connection, const boost::system::error_code &error_code);
@@ -42,5 +41,3 @@ private:
     boost::asio::io_service &io_service;
     tcp::acceptor acceptor;
 };
-
-#endif //SCHOOL_SERVER_SERVER_HPP

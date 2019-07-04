@@ -1,5 +1,4 @@
-#ifndef SCHOOL_SERVER_IOEXCEPTION_HPP
-#define SCHOOL_SERVER_IOEXCEPTION_HPP
+#pragma once
 
 #include <exception>
 #include <string>
@@ -21,5 +20,3 @@ public:
 private:
     const std::string error_msg;
 };
-
-#endif //SCHOOL_SERVER_IOEXCEPTION_HPP
