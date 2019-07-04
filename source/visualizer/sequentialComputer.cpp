@@ -17,9 +17,16 @@ void SequentialComputer::fillForces()
 			Vector3D delta = (parts.get()[i].coords - parts.get()[j].coords);
 			
 			double mod = delta.module()
-
-			forces[i][j] = (gravity * parts.get()[i].mass * parts.get()[j].mass / mod / mod / mod) * delta;
-			forces[j][i] = (-1) * forces[i][j];
+			if (!mod)
+			{
+				forces[i][j] = (gravity * parts.get()[i].mass * parts.get()[j].mass / mod / mod / mod) * delta;
+				forces[j][i] = (-1) * forces[i][j];
+			}
+			else
+			{
+				forces[i][j] = 0;
+				forces[j][i] = 0;
+			}
 		}
 	}
 }
