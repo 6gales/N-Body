@@ -18,7 +18,7 @@ std::string parse_line(const std::string& line) {
     for (auto &str_numb : numbers_vector) {
         const auto numb = static_cast<const float>(std::stod(str_numb));
         const char* p_numb = reinterpret_cast<const char*>(&numb);
-        part_msg.append(p_numb, 4);
+        part_msg.append(p_numb, sizeof(float));
     }
 
     return part_msg;
@@ -29,11 +29,11 @@ ull parse_file(std::istream &data_file, std::string &start_message) {
     std::string count_str;
     std::getline(data_file, count_str);
     ull count = std::stoull(count_str);
-    char byte_count[8];
-    for (size_t i = 0; i < 8; ++i) {
-        byte_count[i] = (char)(count >> ((7-i)*8));
+    char byte_count[sizeof(ull)];
+    for (size_t i = 0; i < sizeof(ull); ++i) {
+        byte_count[i] = (char)(count >> ((sizeof(ull)-i-1)*sizeof(ull)));
     }
-    start_message.append(byte_count, 8);
+    start_message.append(byte_count, sizeof(ull));
     for (ull j = 0; j < count; ++j) {
         std::string line;
         std::getline(data_file, line);
