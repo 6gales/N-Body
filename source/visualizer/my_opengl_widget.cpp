@@ -60,6 +60,7 @@ void MyOpenGLWidget::initProgram() {
     for(unsigned int i = 0; i <numOfVectors; ++i){
             double mass, x, y, z, vx, vy, vz;
             in >> mass >> x >> y >> z >> vx >> vy >> vz;
+            std::cout << mass<< std::endl;
             parts.get()[i] = Particle(mass, x, y, z, vx, vy, vz);
             colors[i]=colorFromMass(mass);
             points[i]=i;
@@ -218,9 +219,9 @@ void MyOpenGLWidget::mouseMoveEvent(QMouseEvent *me){
 }
 void MyOpenGLWidget::wheelEvent(QWheelEvent *qe){
     if(qe->angleDelta().ry()>0)
-        eye+=QVector3D(2.0f,0.0f,0.0f);
+        eye+=QVector3D(20.0f,0.0f,0.0f);
     else
-        eye-=QVector3D(2.0f,0.0f,0.0f);
+        eye-=QVector3D(20.0f,0.0f,0.0f);
     update();
 
 }
@@ -256,7 +257,7 @@ MyOpenGLWidget::~MyOpenGLWidget(){
     delete[] vertices;
 }
 QVector3D MyOpenGLWidget::fromParticle(const Particle &part){
-    return QVector3D(part.getX(),part.getY(),part.getZ());
+    return QVector3D(part.getX()/1.0e+9,part.getY()/1.0e+9,part.getZ()/1.0e+9);
 }
 void MyOpenGLWidget::fromParticleM(const Particle *part){
     for(unsigned int i = 0; i<numOfVectors; i++)
