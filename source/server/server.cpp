@@ -8,7 +8,7 @@
 
 using namespace boost::asio::ip;
 
-std::vector<Particle> parse_message(const std::string &msg, std::shared_ptr<Computer> computer);
+std::vector<Particle> parse_message(const std::string &msg, std::shared_ptr<Computer> computer, std::vector<Particle> &result);
 
 std::string convert_particles_to_msg(const std::vector<Particle> &particles);
 
@@ -55,7 +55,8 @@ void Server::Connection::start() {
                 cond_var.notify_one();
                 continue;
             }
-            auto result = parse_message(msg, computer);
+            std::vector<Particle> result;
+            parse_message(msg, computer, result);
             if (result.empty()) {
                 isNeedClose = true;
                 std::unique_lock<std::mutex> lck(mutex);
