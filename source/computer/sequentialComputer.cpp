@@ -42,8 +42,6 @@ const std::vector<Particle> &SequentialComputer::iterate()
 {
 	fillForces();
 
-	std::cout << std::endl;
-
 	for(ull i = 0; i < N; ++i)
 	{
 		Vector3D F;
