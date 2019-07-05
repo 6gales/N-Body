@@ -2,7 +2,8 @@
 #include <iostream>
 #include <cstring>
 #include <vector>
-#include "../computer/abstractComputer.h"
+//#include "../computer/abstractComputer.h"
+#include "Particle.h"
 #include "IOException.hpp"
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>

@@ -1,7 +1,8 @@
 #include "clientReader.hpp"
 #include "IOException.hpp"
 #include "client.hpp"
-#include "../computer/abstractComputer.h"
+//#include "../computer/abstractComputer.h"
+#include "Particle.h"
 #include <iostream>
 #include <fstream>
 #include <queue>
@@ -18,7 +19,7 @@ std::string read_message(tcp::socket &sock) {
     boost::asio::streambuf buf;
     ClientReader reader{buf};
     boost::asio::read(sock, buf, [&reader](const boost::system::error_code& err_code, size_t bytes) -> size_t {
-        reader.check_count_objects(err_code, bytes);
+        return reader.check_count_objects(err_code, bytes);
     });
     std::string msg = std::string{boost::asio::buffers_begin(buf.data()), boost::asio::buffers_end(buf.data())};
 
@@ -40,7 +41,7 @@ void Client::connect(const std::string host, const unsigned short port) {
 
     std::thread write_thread{[ptr, this]() {
         while (!isNeedClose) {
-            std::unique_lock<std::mutex> lck(mutex);
+            std::unique_lock<std::mutex> lck(mutex_msg);
             while (isEmptyQueue) cond_var.wait(lck);
             if (isNeedClose && msg_queue.empty()) break;
             const auto msg = msg_queue.front();
@@ -59,13 +60,14 @@ void Client::connect(const std::string host, const unsigned short port) {
             } catch (std::exception &ex) {
                 std::cerr << "Error while read from socket: " << ex.what() << std::endl;
                 isNeedClose = true;
-                std::unique_lock<std::mutex> lck(mutex);
+                std::unique_lock<std::mutex> lck(mutex_msg);
                 isEmptyQueue = false;
                 cond_var.notify_one();
                 continue;
             }
             auto particles = parse_msg_from_server(msg);
-            printParticles(particles);
+			deq->push_back(particles);
+            //printParticles(particles);
             //TODO convert msg to good format for visualisator
             //TODO maybe call method 'next'
         }
@@ -73,11 +75,50 @@ void Client::connect(const std::string host, const unsigned short port) {
     read_thread.detach();
 }
 
+void Client::push_back(const std::vector<Particle>& p) {
+	mutex_deq.lock();
+	deq->push_back(p);
+	mutex_deq.unlock();
+}
+
+void Client::push_front(const std::vector<Particle>& p) {
+	mutex_deq.lock();
+	deq->push_front(p);
+	mutex_deq.unlock();
+}
+
+void Client::pop_back() {
+	mutex_deq.lock();
+	deq->pop_back();
+	mutex_deq.unlock();
+}
+
+void Client::pop_front() {
+	mutex_deq.lock();
+	deq->pop_front();
+	mutex_deq.unlock();
+}
+
+std::vector<Particle> Client::get_back() {
+	mutex_deq.lock();
+    auto res = deq->get_back();
+	mutex_deq.unlock();
+    return res;
+}
+
+std::vector<Particle> Client::get_front() {
+	mutex_deq.lock();
+    auto res = deq->get_front();
+	mutex_deq.unlock();
+    return res;
+}
+
+
 void Client::start(std::ifstream &data_file) {
     std::string start_message{};
     count = parse_file(data_file, start_message);
 
-    std::unique_lock<std::mutex> lck(mutex);
+    std::unique_lock<std::mutex> lck(mutex_msg);
     msg_queue.push(start_message);
     isEmptyQueue = false;
     cond_var.notify_one();
@@ -85,7 +126,7 @@ void Client::start(std::ifstream &data_file) {
 }
 
 void Client::stop() {
-    std::unique_lock<std::mutex> lck(mutex);
+    std::unique_lock<std::mutex> lck(mutex_msg);
     msg_queue.push(std::string{"STOP "});
     isEmptyQueue = false;
     cond_var.notify_one();
@@ -93,7 +134,7 @@ void Client::stop() {
 }
 
 void Client::next() {
-    std::unique_lock<std::mutex> lck(mutex);
+    std::unique_lock<std::mutex> lck(mutex_msg);
     msg_queue.push(std::string{"NEXT "});
     isEmptyQueue = false;
     cond_var.notify_one();

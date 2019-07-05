@@ -11,6 +11,10 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->mainToolBar->hide();
 }
 
+void MainWindow::start_client(std::shared_ptr<Client> cl, std::ifstream &file) {
+    ui->openGLWidget->set_client(cl, file);
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;

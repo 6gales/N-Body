@@ -6,6 +6,7 @@ class ClientReader {
 private:
     boost::asio::streambuf& buf;
     bool isWasCount = false;
+	bool isCommand = false;
     unsigned long long count = 0;
 
 public:

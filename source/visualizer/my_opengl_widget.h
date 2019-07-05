@@ -1,5 +1,5 @@
 #pragma once
-
+#include "../client/client.hpp"
 #include <QOpenGLWidget>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
@@ -23,6 +23,7 @@ class MyOpenGLWidget : public QOpenGLWidget {
 public:
     explicit MyOpenGLWidget(QWidget *parent=nullptr);
     ~MyOpenGLWidget() override;
+    void set_client(std::shared_ptr<Client> cl, std::ifstream &file);
 
 protected:
     virtual void initializeGL() override;
@@ -38,11 +39,13 @@ private:
     void initProgram();
     void initView();
     QVector3D fromParticle(const Particle &part);
-    void fromParticleM(const Particle *part);
+    void fromParticleM(std::vector<Particle> &parts);
     void onTimer();
 
 private:
     std::shared_ptr<QOpenGLShaderProgram> program;
+
+    std::shared_ptr<Client> client;
 
     QOpenGLVertexArrayObject vao, lao;
     QOpenGLBuffer vertex_buffer, color_buffer, index_buffer,linev_buffer, linec_buffer, linex_buffer;
