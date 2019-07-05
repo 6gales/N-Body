@@ -18,13 +18,6 @@ Vector3D operator+(const Vector3D &v1, const Vector3D &v2)
 Vector3D operator-(const Vector3D &v1, const Vector3D &v2)
 {
 	return Vector3D(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> server
-=======
->>>>>>> computer
 }
 
 
@@ -32,12 +25,4 @@ std::ostream& operator<<(std::ostream &os, const Vector3D &v)
 {
 	os << "(" << v.x << "," << v.y << "," << v.z << ")";
 	return os;
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> server
-=======
->>>>>>> server
-=======
->>>>>>> computer
 }

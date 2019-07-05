@@ -10,11 +10,7 @@ private:
 	void fillForces();
 
 public:
-<<<<<<< HEAD
 	void init(std::vector<Particle> &, ull);
-=======
-	void init(std::vector<Particle> &, size_t);
->>>>>>> computer
 	const std::vector<Particle> &iterate();
 	~SequentialComputer();
 };
