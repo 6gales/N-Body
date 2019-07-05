@@ -1,7 +1,12 @@
 #pragma once
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <ostream>
 =======
+>>>>>>> server
+=======
+#include <ostream>
+#include <math.h>
 >>>>>>> server
 
 class Vector3D
@@ -56,7 +61,7 @@ public:
 
 	double module()
 	{
-		return x * x + y * y + z * z;
+		return sqrt(x * x + y * y + z * z);
 	}
 
 };
@@ -69,10 +74,17 @@ Vector3D operator*(double mul, const Vector3D &v);
 Vector3D operator+(const Vector3D &v1, const Vector3D &v2);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Vector3D operator-(const Vector3D &v1, const Vector3D &v2);
 
 
 std::ostream& operator<<(std::ostream &, const Vector3D&);
 =======
 Vector3D operator-(const Vector3D &v1, const Vector3D &v2);
+>>>>>>> server
+=======
+Vector3D operator-(const Vector3D &v1, const Vector3D &v2);
+
+
+std::ostream& operator<<(std::ostream &, const Vector3D&);
 >>>>>>> server

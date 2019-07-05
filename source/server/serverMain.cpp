@@ -8,10 +8,11 @@ int main(int argc, char *argv[]) {
 //    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     try {
-        const unsigned short port = (argc > 1 ? static_cast<unsigned short>(std::stoi(argv[1])) : 1234);
+        const auto ip_address = (argc > 1 ? std::string{argv[1]} : std::string{"0.0.0.0"});
+        const unsigned short port = (argc > 2 ? static_cast<unsigned short>(std::stoi(argv[2])) : 1234);
 
         boost::asio::io_service io_service;
-        tcp::endpoint ep{tcp::v4(), port};
+        tcp::endpoint ep{address::from_string(ip_address), port};
         Server server(io_service, ep);
 
         server.start_accept();
