@@ -1,6 +1,7 @@
 #pragma once
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <ostream>
 =======
 >>>>>>> server
@@ -8,6 +9,10 @@
 #include <ostream>
 #include <math.h>
 >>>>>>> server
+=======
+#include <ostream>
+#include <math.h>
+>>>>>>> computer
 
 class Vector3D
 {
@@ -75,6 +80,7 @@ Vector3D operator+(const Vector3D &v1, const Vector3D &v2);
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 Vector3D operator-(const Vector3D &v1, const Vector3D &v2);
 
 
@@ -88,3 +94,9 @@ Vector3D operator-(const Vector3D &v1, const Vector3D &v2);
 
 std::ostream& operator<<(std::ostream &, const Vector3D&);
 >>>>>>> server
+=======
+Vector3D operator-(const Vector3D &v1, const Vector3D &v2);
+
+
+std::ostream& operator<<(std::ostream &, const Vector3D&);
+>>>>>>> computer

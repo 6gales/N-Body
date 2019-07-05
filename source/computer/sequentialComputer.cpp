@@ -9,14 +9,19 @@ void SequentialComputer::fillForces()
 		{
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 			if(i == j)
 =======
 			if (i == j)
 >>>>>>> server
+=======
+			if (i == j)
+>>>>>>> computer
 			{
 				forces[i][j] = 0.0;
 				continue;
 			}
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 =======
@@ -24,6 +29,8 @@ void SequentialComputer::fillForces()
 >>>>>>> server
 =======
 >>>>>>> server
+=======
+>>>>>>> computer
 
 			Vector3D delta = (particleVectors[previous][i].coords - particleVectors[previous][j].coords);
 			double mod = delta.module();
@@ -36,7 +43,11 @@ void SequentialComputer::fillForces()
 }
 
 
+<<<<<<< HEAD
 void SequentialComputer::init(std::vector<Particle> &particles, ull _N)
+=======
+void SequentialComputer::init(std::vector<Particle> &particles, size_t _N)
+>>>>>>> computer
 {
 	particleVectors[previous] = particles;
 	particleVectors[current] = particles;
@@ -56,6 +67,7 @@ const std::vector<Particle> &SequentialComputer::iterate()
 
 	std::cout << std::endl;
 
+<<<<<<< HEAD
 	for(size_t i = 0; i < N; ++i)
 	{
 <<<<<<< HEAD
@@ -68,12 +80,15 @@ const std::vector<Particle> &SequentialComputer::iterate()
 
 	std::cout << std::endl;
 
+=======
+>>>>>>> computer
 	for(size_t i = 0; i < N; ++i)
 	{
 		Vector3D F;
 		for(size_t j = 0; j < N; ++j)
 		{
 			F += forces[j][i];
+<<<<<<< HEAD
 =======
 		Vector3D F;
 		for(size_t j = 0; j < N; ++j)
@@ -84,6 +99,8 @@ const std::vector<Particle> &SequentialComputer::iterate()
 =======
 			F -= forces[i][j];
 >>>>>>> server
+=======
+>>>>>>> computer
 		}
 		Vector3D acc = F * (1.0 / particleVectors[previous][i].mass);
 		particleVectors[current][i].vel = particleVectors[previous][i].vel + acc * dt;

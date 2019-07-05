@@ -1,5 +1,6 @@
 #pragma once
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <memory>
 <<<<<<< HEAD
 #include <iostream>
@@ -35,19 +36,32 @@ struct Particle
 
 using ull = unsigned long long;
 >>>>>>> server
+=======
+#include <iostream>
+#include <vector>
+#include "Particle.h"
+>>>>>>> computer
 
 class Computer
 {
 protected:
 	double gravity = 6.67408e-11;
 	double dt = 0.001;
+<<<<<<< HEAD
 	ull N;
+=======
+	size_t N;
+>>>>>>> computer
 	std::vector<Particle> particleVectors[2];
 	char previous = 1,
 		current = 0;
 
 public:
+<<<<<<< HEAD
 	virtual void init(std::vector<Particle> &, ull) = 0;
+=======
+	virtual void init(std::vector<Particle> &, size_t) = 0;
+>>>>>>> computer
 	virtual const std::vector <Particle>& iterate() = 0;
 	virtual ~Computer() {};
 	void setGravity(double _gravity){ gravity = _gravity; }

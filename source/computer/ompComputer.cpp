@@ -23,7 +23,11 @@ void ompComputer::fillForces()
 	}
 }
 
+<<<<<<< HEAD
 void ompComputer::init(std::vector<Particle> &particles, ull _N)
+=======
+void ompComputer::init(std::vector<Particle> &particles, size_t _N)
+>>>>>>> computer
 {
 	particleVectors[previous] = particles;
 	particleVectors[current] = particles;
@@ -49,7 +53,11 @@ const std::vector<Particle> &ompComputer::iterate()
 		Vector3D F;
 		for(size_t j = 0; j < N; ++j)
 		{
+<<<<<<< HEAD
 			F -= forces[i][j];
+=======
+			F += forces[j][i];
+>>>>>>> computer
 		}
 		Vector3D acc = F * (1.0 / particleVectors[previous][i].mass);
 		particleVectors[current][i].vel = particleVectors[previous][i].vel + acc * dt;
