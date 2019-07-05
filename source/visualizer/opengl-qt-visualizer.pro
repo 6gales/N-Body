@@ -10,6 +10,10 @@ CONFIG += file_copies
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+exists(local.pri) {
+    include(local.pri)
+}
+
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -39,7 +43,8 @@ HEADERS  += \
     computer.h \
     main_window.h \
     my_opengl_widget.h \
-    sequentialComputer.h
+    sequentialComputer.h \
+
 
 FORMS    += \
     main_window.ui
@@ -53,3 +58,11 @@ COPIES += shaders
 
 shaders.files = $$files(shaders/*)
 shaders.path = $$OUT_PWD/shaders
+
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../local/lib/ -llibboost_system-vc142-mt-x64-1_70
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../local/lib/ -llibboost_system-vc142-mt-x64-1_70d
+#else:unix: LIBS += -L$$PWD/../../../../local/lib/ -llibboost_system-vc142-mt-x64-1_70
+
+#INCLUDEPATH += C:\local\include
+#LIBS += -L"C:\local\lib" -l boost_system.lib
+#DEPENDPATH += $$PWD/../../../../local/include

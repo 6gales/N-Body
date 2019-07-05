@@ -7,7 +7,7 @@ class Computer
 {
 protected:
 	double gravity = 6.67408e-11;
-	double dt = 0.001;
+    double dt = 3154;
 	std::shared_ptr<Particle> parts;
 	size_t N;
 
