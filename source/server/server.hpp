@@ -1,9 +1,9 @@
 #pragma once
 
-#include<boost/asio.hpp>
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+#include <boost/asio.hpp>
 #include "../computer/ompComputer.h"
 #include "serverParser.hpp"
 
@@ -14,7 +14,15 @@ class Server {
 public:
 
     Server(boost::asio::io_service &io_service, tcp::endpoint &endpoint) : acceptor(io_service, endpoint),
-                                                                           io_service(io_service) { }
+                                                                           io_service(io_service) {
+        std::thread check_thread{[this]() {
+            timer.async_wait([this](const boost::system::error_code &errorCode) {
+                this->check(errorCode);
+            });
+            timer_service.run();
+        }};
+        check_thread.detach();
+    }
     void start_working();
 
     ~Server() = default;
@@ -50,8 +58,8 @@ private:
 
     void check(const boost::system::error_code &);
 
-    std::deque<std::shared_ptr<Connection>> connections;
-    std::mutex conn_mutex;
+    std::mutex conn_mutex{};
+    std::deque<std::shared_ptr<Connection>> connections{};
     boost::asio::io_service timer_service{};
     boost::asio::deadline_timer timer{timer_service, boost::posix_time::seconds{120}};
     boost::asio::io_service &io_service;

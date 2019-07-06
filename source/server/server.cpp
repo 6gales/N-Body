@@ -27,10 +27,15 @@ void Server::check(const boost::system::error_code &er) {
     conn_mutex.lock();
     for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
         if (it->unique() || !it->get()->alive()) {
-            it->get()->socket().shutdown(tcp::socket::shutdown_both);
-            it->get()->socket().close();
-            connections.erase(it);
-        } else  {
+            try {
+//                it->get()->socket().shutdown(tcp::socket::shutdown_both);
+                it->get()->socket().close();
+
+            } catch (std::exception& ex) {
+                std::cerr << ex.what() << std::endl;
+            }
+//            connections.erase(it);
+        } else {
             it->get()->add_msg(std::string{"CHECK"});
             it->get()->set_alive(false);
         }
@@ -45,12 +50,6 @@ void Server::check(const boost::system::error_code &er) {
 }
 
 void Server::start_working() {
-    std::thread check_thread{[this]() {
-        timer.async_wait([this](const boost::system::error_code &errorCode) {
-            this->check(errorCode);
-        });
-        timer_service.run();
-    }};
     std::shared_ptr<Connection> connection(new Connection(io_service));
     acceptor.async_accept(connection->socket(), [this, connection](const boost::system::error_code &error_code) {
         this->handle(connection, error_code);

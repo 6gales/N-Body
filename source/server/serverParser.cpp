@@ -60,6 +60,7 @@ CommandType parse_message(const std::string &msg, std::shared_ptr<Computer> comp
 
 std::string convert_particles_to_msg(const std::vector<Particle> &particles) {
     std::string send_msg{};
+    send_msg.append("DATA ", 5);
     char counts[8];
     for (size_t j = 0; j < 8; ++j) {
         counts[j] = (char)(particles.size() >> ((7-j)*8));
