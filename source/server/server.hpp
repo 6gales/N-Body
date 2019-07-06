@@ -2,6 +2,8 @@
 
 #include<boost/asio.hpp>
 #include <queue>
+#include <mutex>
+#include <condition_variable>
 #include "../computer/ompComputer.h"
 #include "serverParser.hpp"
 
@@ -12,8 +14,8 @@ class Server {
 public:
 
     Server(boost::asio::io_service &io_service, tcp::endpoint &endpoint) : acceptor(io_service, endpoint),
-                                                                           io_service(io_service) {}
-    void start_accept();
+                                                                           io_service(io_service) { }
+    void start_working();
 
     ~Server() = default;
 
@@ -29,8 +31,11 @@ private:
 
         void start();
 
+        inline bool alive() { return isAlive; }
+
+        inline void set_alive(bool isAlive1) { this->isAlive = isAlive1; }
+
     private:
-        boost::asio::io_service timer_service{};
         volatile bool isEmptyQueue = true;
         volatile bool isAlive = true;
         std::mutex mutex;
@@ -43,7 +48,12 @@ private:
 
     void handle(std::shared_ptr<Connection> connection, const boost::system::error_code &error_code);
 
-    std::vector<std::shared_ptr<Connection>> connections;
+    void check(const boost::system::error_code &);
+
+    std::deque<std::shared_ptr<Connection>> connections;
+    std::mutex conn_mutex;
+    boost::asio::io_service timer_service{};
+    boost::asio::deadline_timer timer{timer_service, boost::posix_time::seconds{120}};
     boost::asio::io_service &io_service;
     tcp::acceptor acceptor;
 };

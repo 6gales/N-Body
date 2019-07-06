@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
         tcp::endpoint ep{address::from_string(ip_address), port};
         Server server(io_service, ep);
 
-        server.start_accept();
+        server.start_working();
         io_service.run();
     }
     catch (const std::exception &e) {
