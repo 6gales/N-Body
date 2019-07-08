@@ -1,44 +1,98 @@
 #include "server.hpp"
-#include "serverReader.hpp"
 #include "serverParser.hpp"
-#include <mpi/mpi.h>
+#include <boost/bind.hpp>
 #include <thread>
 #include <mutex>
-#include "../computer/abstractComputer.h"
-#include "../computer/sequentialComputer.h"
 
 using namespace boost::asio::ip;
 
-std::string read_message(tcp::socket &sock) {
-    boost::asio::streambuf buf;
-    ServerReader ServerReader{buf};
-    boost::asio::read(sock, buf, [&ServerReader](const boost::system::error_code &err_code, size_t bytes) -> size_t {
-        return ServerReader.check_count_objects(err_code, bytes);
-    });
-    std::string msg{boost::asio::buffers_begin(buf.data()), boost::asio::buffers_end(buf.data())};
-    return msg;
+void Server::Connection::write_message(const std::string &msg) {
+    mutex.lock();
+    send_queue.push_back(msg);
+    send_msg = send_queue.front();
+    send_queue.pop_front();
+    boost::asio::async_write(sock, boost::asio::buffer(send_msg.c_str(), send_msg.length()),
+            boost::bind(&Connection::handle_write_message, shared_from_this(), boost::asio::placeholders::error));
+    mutex.unlock();
 }
 
-void write_message(tcp::socket &sock, const std::string &msg) {
-    boost::asio::write(sock, boost::asio::buffer(msg));
+void Server::Connection::handle_read_command(const boost::system::error_code &er) {
+    if (!er) {
+        if (!strncmp(read_msg, "START", 5)) {
+            delete[] read_msg;
+            read_msg = new char[8];
+            boost::asio::async_read(sock, boost::asio::buffer(read_msg, 8),
+                    boost::bind(&Connection::handle_read_count, shared_from_this(), boost::asio::placeholders::error));
+        } else {
+            if (!strncmp(read_msg, "NEXT ", 5)) {
+                data_particle = computer->iterate();
+                std::string msg = convert_particles_to_msg(data_particle);
+                write_message(msg);
+            } else if (!strncmp(read_msg, "STOP ", 5)) {
+                server.remove_connection(shared_from_this());
+                return;
+            } else if (!strncmp(read_msg, "PAUSE", 5)) {
+
+            }
+            boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
+                    boost::bind(&Connection::handle_read_command, shared_from_this(), boost::asio::placeholders::error));
+        }
+    } else {
+        server.remove_connection(shared_from_this());
+    }
+}
+
+void Server::Connection::handle_read_count(const boost::system::error_code &er) {
+    if (!er) {
+        std::string str_msg{read_msg, 8};
+        count = (((ull)str_msg.at(0) << 56) & 0xFF00000000000000) | (((ull)str_msg.at(1) << 48) & 0x00FF000000000000) | (((ull)str_msg.at(2) << 40) & 0x0000FF0000000000)
+                              | (((ull)str_msg.at(3) << 32) & 0x000000FF00000000) | (((ull)str_msg.at(4) << 24) & 0x00000000FF000000) | (((ull)str_msg.at(5) << 16) & 0x0000000000FF0000)
+                              | (((ull)str_msg.at(6) << 8) & 0x000000000000FF00) | ((ull)str_msg.at(7) & 0x00000000000000FF);
+        delete[] read_msg;
+        read_msg = new char[sizeof(float)*7*count];
+        boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*7*count),
+                boost::bind(&Connection::handle_read_data, shared_from_this(), boost::asio::placeholders::error));
+    } else {
+        server.remove_connection(shared_from_this());
+    }
+}
+
+void Server::Connection::handle_read_data(const boost::system::error_code &er) {
+    if (!er) {
+        data_particle = parse_start_message(read_msg, count);
+        computer->init(data_particle, count);
+        computer->iterate();
+        std::string msg = convert_particles_to_msg(data_particle);
+        write_message(msg);
+        delete[] read_msg;
+        read_msg = new char[5];
+        boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
+                boost::bind(&Connection::handle_read_command, shared_from_this(), boost::asio::placeholders::error));
+    } else {
+        server.remove_connection(shared_from_this());
+    }
+}
+
+void Server::Connection::handle_write_message(const boost::system::error_code &er) {
+    if (!er) {
+        mutex.lock();
+        if (!send_queue.empty()) {
+            send_msg = send_queue.front();
+            send_queue.pop_front();
+            boost::asio::async_write(sock, boost::asio::buffer(send_msg.c_str(), send_msg.length()),
+                                     boost::bind(&Connection::handle_write_message, shared_from_this(), boost::asio::placeholders::error));
+        }
+        mutex.unlock();
+    } else {
+        server.remove_connection(shared_from_this());
+    }
 }
 
 void Server::check(const boost::system::error_code &er) {
     conn_mutex.lock();
-    for (auto it = this->connections.begin(); it != this->connections.end(); ++it) {
-        if (it->unique() || !it->get()->alive()) {
-            try {
-//                it->get()->socket().shutdown(tcp::socket::shutdown_both);
-                it->get()->socket().close();
-
-            } catch (std::exception& ex) {
-                std::cerr << ex.what() << std::endl;
-            }
-//            connections.erase(it);
-        } else {
-            it->get()->add_msg(std::string{"CHECK"});
-            it->get()->set_alive(false);
-        }
+    for (const auto & connection : this->connections) {
+        std::string check_msg{"CHECK"};
+        connection.get()->write_message(check_msg);
     }
     conn_mutex.unlock();
 
@@ -50,7 +104,7 @@ void Server::check(const boost::system::error_code &er) {
 }
 
 void Server::start_working() {
-    std::shared_ptr<Connection> connection(new Connection(io_service));
+    std::shared_ptr<Connection> connection(new Connection(io_service, *this));
     acceptor.async_accept(connection->socket(), [this, connection](const boost::system::error_code &error_code) {
         this->handle(connection, error_code);
     });
@@ -59,61 +113,27 @@ void Server::start_working() {
 void Server::handle(std::shared_ptr<Connection> connection, const boost::system::error_code &error_code) {
     if (!error_code) {
         connection->start();
-        conn_mutex.lock();
-        connections.push_front(connection);
-        conn_mutex.unlock();
     }
     this->start_working();
 }
 
-void Server::Connection::start() {
-
-    auto ptr = this->shared_from_this();
-    std::thread recv_thread([this, ptr] (){
-        while (commandType != CommandType::STOP_) {
-            std::string msg;
-            try {
-                msg = read_message(this->socket());
-            } catch (const std::exception& ex) {
-                std::cerr << ex.what() << "Close connection" << std::endl;
-                commandType = CommandType::STOP_;
-                std::unique_lock<std::mutex> lck(mutex);
-                isEmptyQueue = false;
-                cond_var.notify_one();
-                continue;
-            }
-            std::vector<Particle> result;
-            commandType = parse_message(msg, computer, result);
-            if (commandType == CommandType::STOP_) {
-                std::unique_lock<std::mutex> lck(mutex);
-                isEmptyQueue = false;
-                cond_var.notify_one();
-            } else if (commandType == CommandType::START_ || commandType == CommandType::NEXT_) {
-                std::unique_lock<std::mutex> lck(mutex);
-                particles_queue.push(convert_particles_to_msg(result));
-                isEmptyQueue = false;
-                cond_var.notify_one();
-            } else if (commandType == CommandType::ALIVE_) {
-                this->set_alive(true);
-            }
-        }
-    });
-    recv_thread.detach();
-
-    std::thread send_thread([this, ptr] () {
-        while (commandType != CommandType::STOP_) {
-            std::unique_lock<std::mutex> lck(mutex);
-            while (isEmptyQueue) cond_var.wait(lck);
-            if (commandType == CommandType::STOP_) break;
-            const auto msg = particles_queue.front();
-            particles_queue.pop();
-            if (particles_queue.empty()) isEmptyQueue = true;
-            write_message(this->socket(), msg);
-        }
-    });
-    send_thread.detach();
+void Server::add_connection(const std::shared_ptr<Server::Connection> &conn) {
+    conn_mutex.lock();
+    connections.insert(conn);
+    conn_mutex.unlock();
 }
 
-void Server::Connection::add_msg(const std::string &msg) {
-    particles_queue.push(msg);
+void Server::remove_connection(const std::shared_ptr<Server::Connection> &conn) {
+    conn_mutex.lock();
+    connections.erase(conn);
+    conn_mutex.unlock();
+}
+
+void Server::Connection::start() {
+
+    server.add_connection(shared_from_this());
+    read_msg = new char[5];
+    boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
+                            boost::bind(&Connection::handle_read_command, shared_from_this(),
+                                        boost::asio::placeholders::error));
 }

@@ -1,11 +1,13 @@
 #pragma once
 
 #include <queue>
+#include <set>
 #include <mutex>
 #include <condition_variable>
 #include <boost/asio.hpp>
 #include "../computer/ompComputer.h"
 #include "serverParser.hpp"
+#include "../computer/sequentialComputer.h"
 
 using namespace boost::asio::ip;
 
@@ -13,8 +15,38 @@ class Server {
 
 public:
 
+    class Connection : public std::enable_shared_from_this<Connection> {
+    public:
+        Connection(boost::asio::io_service &io_service, Server &server) : sock(io_service), server(server) { }
+
+        void write_message(const std::string&);
+
+        void handle_read_command(const boost::system::error_code &er);
+
+        void handle_read_count(const boost::system::error_code &er);
+
+        void handle_read_data(const boost::system::error_code &er);
+
+        void handle_write_message(const boost::system::error_code &er);
+
+        inline tcp::socket& socket() { return sock; }
+
+        void start();
+
+    private:
+        volatile ull count = 0;
+        tcp::socket sock;
+        char* read_msg = nullptr;
+        std::string send_msg;
+        Server &server;
+        std::shared_ptr<Computer> computer{new ompComputer(4)};
+        std::vector<Particle> data_particle{};
+        std::mutex mutex{};
+        std::deque<std::string> send_queue{};
+    };
+
     Server(boost::asio::io_service &io_service, tcp::endpoint &endpoint) : acceptor(io_service, endpoint),
-                                                                           io_service(io_service) {
+                                                                            io_service(io_service) {
         std::thread check_thread{[this]() {
             timer.async_wait([this](const boost::system::error_code &errorCode) {
                 this->check(errorCode);
@@ -25,41 +57,20 @@ public:
     }
     void start_working();
 
+    void add_connection(const std::shared_ptr<Connection> &conn);
+
+    void remove_connection(const std::shared_ptr<Server::Connection> &conn);
+
     ~Server() = default;
 
 private:
-
-    class Connection : public std::enable_shared_from_this<Connection> {
-    public:
-        explicit Connection(boost::asio::io_service &io_service) : sock(io_service) { }
-
-        void add_msg(const std::string& msg);
-
-        inline tcp::socket& socket() { return sock; }
-
-        void start();
-
-        inline bool alive() { return isAlive; }
-
-        inline void set_alive(bool isAlive1) { this->isAlive = isAlive1; }
-
-    private:
-        volatile bool isEmptyQueue = true;
-        volatile bool isAlive = true;
-        std::mutex mutex;
-        std::condition_variable cond_var;
-        tcp::socket sock;
-        std::queue<std::string> particles_queue{};
-        std::shared_ptr<Computer> computer{new ompComputer{4}};
-        volatile CommandType commandType = CommandType::ALIVE_;
-    };
 
     void handle(std::shared_ptr<Connection> connection, const boost::system::error_code &error_code);
 
     void check(const boost::system::error_code &);
 
     std::mutex conn_mutex{};
-    std::deque<std::shared_ptr<Connection>> connections{};
+    std::set<std::shared_ptr<Connection>> connections{};
     boost::asio::io_service timer_service{};
     boost::asio::deadline_timer timer{timer_service, boost::posix_time::seconds{120}};
     boost::asio::io_service &io_service;

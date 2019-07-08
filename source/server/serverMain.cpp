@@ -4,9 +4,6 @@
 using namespace boost::asio::ip;
 
 int main(int argc, char *argv[]) {
-//    int rank, size;
-//    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
     try {
         const auto ip_address = (argc > 1 ? std::string{argv[1]} : std::string{"0.0.0.0"});
         const unsigned short port = (argc > 2 ? static_cast<unsigned short>(std::stoi(argv[2])) : 1234);
