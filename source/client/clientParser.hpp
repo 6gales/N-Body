@@ -1,0 +1,4 @@
+#ifndef CLIENTPARSER_HPP
+#define CLIENTPARSER_HPP
+
+#endif // CLIENTPARSER_HPP

@@ -1,10 +1,7 @@
 #include "IOException.hpp"
 #include "client.hpp"
-#include "Particle.h"
+#include "clientParser.hpp"
 #include <boost/bind.hpp>
-#include <iostream>
-#include <fstream>
-#include <queue>
 #include <thread>
 #include <mutex>
 
@@ -12,9 +9,6 @@ using namespace boost::asio::ip;
 
 using ull = unsigned long long;
 
-size_t parse_file(std::istream &data_file, std::string &start_message, std::vector<float> &particles_mass);
-
-std::vector<Particle> parse_data_msg(const char*, ull);
 
 Client::Client(std::string host, unsigned short port, std::ifstream& data_file)
             : sock{io_service} {
