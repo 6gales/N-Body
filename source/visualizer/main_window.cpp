@@ -11,8 +11,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->mainToolBar->hide();
 }
 
-void MainWindow::start_client(std::shared_ptr<Client> cl, std::ifstream &file) {
-    ui->openGLWidget->set_client(cl, file);
+void MainWindow::start_client(std::string host, unsigned short port, std::ifstream &data_file) {
+    ui->openGLWidget->set_client(host, port, data_file);
 }
 
 MainWindow::~MainWindow()

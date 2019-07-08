@@ -31,7 +31,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp\
     ../client/client.cpp \
     ../client/clientParser.cpp \
-    ../client/clientReader.cpp \
     Particle.cpp \
     Vector3D.cpp \
     computer.cpp \
@@ -43,7 +42,6 @@ SOURCES += main.cpp\
 HEADERS  += \
     ../client/IOException.hpp \
     ../client/client.hpp \
-    ../client/clientReader.hpp \
     Particle.h \
     Vector3D.h \
     abstractComputer.h \
@@ -71,6 +69,6 @@ shaders.path = $$OUT_PWD/shaders
 #else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../local/lib/ -llibboost_system-vc142-mt-x64-1_70d
 #else:unix: LIBS += -L$$PWD/../../../../local/lib/ -llibboost_system-vc142-mt-x64-1_70
 
-INCLUDEPATH += C:\local\include
-LIBS += -L"C:\local\lib" -lws2_32
+#INCLUDEPATH += C:\local\include
+#LIBS += -L"C:\local\lib" -lws2_32
 #DEPENDPATH += $$PWD/../../../../local/include

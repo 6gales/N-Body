@@ -1,4 +1,4 @@
-#include "../client/client.hpp"
+#include "../../../N-Body/source/client/client.hpp"
 #include "my_opengl_widget.h"
 
 #include <QOpenGLContext>
@@ -22,12 +22,11 @@ MyOpenGLWidget::MyOpenGLWidget(QWidget *parent) :
     setFormat(format);
 
     connect(&timer, &QTimer::timeout, this, &MyOpenGLWidget::onTimer);
-    timer.start(60);
+    timer.start(1);
 }
 
-void MyOpenGLWidget::set_client(std::shared_ptr<Client> cl, std::ifstream &file) {
-    client = cl;
-    client->start(file);
+void MyOpenGLWidget::set_client(std::string host, unsigned short port, std::ifstream &data_file) {
+    client = new Client{host, port, data_file};
 }
 
 void MyOpenGLWidget::initializeGL() {
@@ -41,7 +40,7 @@ void MyOpenGLWidget::initializeGL() {
     initProgram();
 }
 QVector3D colorFromMass(double mass){ //prototype realization
-    if(mass<1e+29)
+    if(mass<1e+15)
         return QVector3D(1.0f,1.0f,1.0f);
     if(mass<1e+32)
         return QVector3D(1.0f,0.5f,0.0f);
@@ -55,23 +54,24 @@ QVector3D colorFromMass(double mass){ //prototype realization
 }
 void MyOpenGLWidget::initProgram() {
 //    std::ifstream in("C://ssd.sccc//N-Body//source//visualizer//in.txt");
-//    in>>numOfVectors;
+    numOfVectors = client->get_count();
 //    computer = getInstanceOf();
 
     vertices = new QVector3D[numOfVectors] () ;
-    QVector3D *colors = new QVector3D[numOfVectors] () ;
-    unsigned int *points = new unsigned int[numOfVectors] ();
-    std::vector<Particle> parts{numOfVectors};
+    QVector3D *colors = new QVector3D[numOfVectors];
+    unsigned long long *points = new unsigned long long[numOfVectors];
+    std::vector<float> particles_mass = client->get_particles_mass();
+//    std::vector<Particle> parts{numOfVectors};
 
-//    for(unsigned int i = 0; i <numOfVectors; ++i){
+    for(unsigned long long i = 0; i <numOfVectors; ++i) {
 //            double mass, x, y, z, vx, vy, vz;
 //            in >> mass >> x >> y >> z >> vx >> vy >> vz;
-//            std::cout << mass<< std::endl;
+//            std::cerr << particles_mass[i] << std::endl;
 //            parts[i] = Particle(mass, x, y, z, vx, vy, vz);
-//            colors[i]=colorFromMass(mass);
-//            points[i]=i;
-////            std::cout << parts[i] << std::endl;
-//    }
+            colors[i]=colorFromMass(particles_mass[i]);
+            points[i]=i;
+//            std::cout << parts[i] << std::endl;
+    }
 //    in.close();
 //    computer->init(parts, numOfVectors);
     program = std::make_shared<QOpenGLShaderProgram>();
@@ -138,7 +138,8 @@ void MyOpenGLWidget::initProgram() {
 
     lao.release();
     program->release();
-    delete [] points;
+    delete[] points;
+    delete[] colors;
 }
 
 void MyOpenGLWidget::resizeGL(int width, int height) {
@@ -252,24 +253,28 @@ void MyOpenGLWidget::keyPressEvent(QKeyEvent *ke){
     }
 }
 void MyOpenGLWidget::onTimer() {
+    if (!client) return;
     auto particles = client->get_front();
     client->pop_front();
     if (particles.empty()) return;
+//    std::cerr << particles.size() << std::endl;
     fromParticleM(particles);
     vao.bind();
     vertex_buffer.bind();
-    vertex_buffer.write(NULL,vertices, static_cast<int>(numOfVectors*sizeof(QVector3D)));
+    vertex_buffer.write(0,vertices, static_cast<int>(numOfVectors*sizeof(QVector3D)));
     vao.release();
     update();
 }
 MyOpenGLWidget::~MyOpenGLWidget(){
+    delete client;
     delete[] vertices;
 }
 QVector3D MyOpenGLWidget::fromParticle(const Particle &part){
     return QVector3D(part.getX()/1.0e+9,part.getY()/1.0e+9,part.getZ()/1.0e+9);
 }
 void MyOpenGLWidget::fromParticleM(std::vector<Particle> &parts){
-    for(unsigned int i = 0; i<numOfVectors; i++)
+    for(unsigned long long i = 0; i<numOfVectors; i++) {
         vertices[i]=fromParticle(parts[i]);
-
+//        std::cerr << vertices[i].x() << " " << vertices[i].y() << " " << vertices[i].z() << " " << std::endl;
+    }
 }

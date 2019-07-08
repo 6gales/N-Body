@@ -1,5 +1,5 @@
 #pragma once
-#include "../client/client.hpp"
+#include "../../../N-Body/source/client/client.hpp"
 #include <QOpenGLWidget>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
@@ -23,7 +23,7 @@ class MyOpenGLWidget : public QOpenGLWidget {
 public:
     explicit MyOpenGLWidget(QWidget *parent=nullptr);
     ~MyOpenGLWidget() override;
-    void set_client(std::shared_ptr<Client> cl, std::ifstream &file);
+    void set_client(std::string host, unsigned short port, std::ifstream &data_file);
 
 protected:
     virtual void initializeGL() override;
@@ -45,7 +45,7 @@ private:
 private:
     std::shared_ptr<QOpenGLShaderProgram> program;
 
-    std::shared_ptr<Client> client;
+    Client *client = nullptr;
 
     QOpenGLVertexArrayObject vao, lao;
     QOpenGLBuffer vertex_buffer, color_buffer, index_buffer,linev_buffer, linec_buffer, linex_buffer;
@@ -63,6 +63,6 @@ private:
     float yrotation_angle {0.0f};
     float zrotation_angle {0.0f};
     QTimer timer;
-    unsigned int numOfVectors;
+    unsigned long long numOfVectors;
 };
 

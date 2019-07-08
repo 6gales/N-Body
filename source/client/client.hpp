@@ -1,21 +1,33 @@
 #pragma once
+#include <mutex>
+#include <condition_variable>
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
 #include <queue>
 #include "particlesdeque.h"
 
 using namespace boost::asio::ip;
 
-class Client : public std::enable_shared_from_this<Client> {
+class Client {
 public:
 
-    Client(boost::asio::io_service& io_service, std::shared_ptr<ParticlesDeque> deq)
-                : io_service{io_service}, deq{deq}, sock{io_service} { }
+    Client(std::string host, unsigned short port, std::ifstream& data_file);
 
     tcp::socket& socket();
 
-    void connect(const std::string host, const unsigned short port);
+    void connect(basic_resolver_results<tcp> ep);
 
-    void start(std::ifstream &data_file);
+    void write_msg(const std::string msg);
+
+    void handle_read_command(const boost::system::error_code &er);
+
+    void handle_read_data(const boost::system::error_code &er);
+
+    void handle_write_msg(const boost::system::error_code &er);
+
+    void handle_connect(const boost::system::error_code &er);
+
+    void start(std::ifstream &data_file, basic_resolver_results<tcp> ep);
 
     void push_back(const std::vector<Particle>& p);
 
@@ -29,19 +41,29 @@ public:
 
     std::vector<Particle> get_front();
 
+    unsigned long long get_count() const;
+
+    const std::vector<float>& get_particles_mass() const;
+
     void stop();
 
     void next();
 
+    void pause();
+
+    void close();
+
+    ~Client() noexcept {
+        delete[] read_msg;
+    }
+
 private:
     volatile unsigned long long count = 0;
-    boost::asio::io_service &io_service;
+    char* read_msg;
+    ParticlesDeque deq{};
+    boost::asio::io_service io_service{};
     tcp::socket sock;
-    std::mutex mutex_msg;
+    std::vector<float> particles_mass;
     std::mutex mutex_deq;
-    volatile bool isEmptyQueue = true;
-    std::queue<std::string> msg_queue{};
-    std::condition_variable cond_var;
-    volatile bool isNeedClose = false;
-    std::shared_ptr<ParticlesDeque> deq;
-}; 
+    std::deque<std::string> send_queue{};
+};
