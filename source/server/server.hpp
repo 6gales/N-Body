@@ -55,6 +55,15 @@ public:
         }};
         check_thread.detach();
     }
+
+    Server(const Server&) = delete;
+
+    Server& operator=(const Server&) = delete;
+
+    Server(Server &&) = delete;
+
+    Server&& operator=(Server &&) = delete;
+
     void start_working();
 
     void add_connection(const std::shared_ptr<Connection> &conn);

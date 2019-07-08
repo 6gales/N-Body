@@ -88,19 +88,30 @@ void Server::Connection::handle_write_message(const boost::system::error_code &e
     }
 }
 
+void Server::Connection::start() {
+
+    server.add_connection(shared_from_this());
+    read_msg = new char[5];
+    boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
+                            boost::bind(&Connection::handle_read_command, shared_from_this(),
+                                        boost::asio::placeholders::error));
+}
+
 void Server::check(const boost::system::error_code &er) {
-    conn_mutex.lock();
-    for (const auto & connection : this->connections) {
-        std::string check_msg{"CHECK"};
-        connection.get()->write_message(check_msg);
+    if (!er) {
+        conn_mutex.lock();
+        for (const auto &connection : this->connections) {
+            std::string check_msg{"CHECK"};
+            connection.get()->write_message(check_msg);
+        }
+        conn_mutex.unlock();
+
+        timer.expires_at(timer.expires_at() + boost::posix_time::seconds(120));
+
+        timer.async_wait(boost::bind(&Server::check, this, boost::asio::placeholders::error));
+    } else {
+        std::cerr << "CRITICAL ERROR: " << er.message() << std::endl;
     }
-    conn_mutex.unlock();
-
-    timer.expires_at(timer.expires_at() + boost::posix_time::seconds(120));
-
-    timer.async_wait([this](const boost::system::error_code &errorCode) {
-        this->check(errorCode);
-    });
 }
 
 void Server::start_working() {
@@ -127,13 +138,4 @@ void Server::remove_connection(const std::shared_ptr<Server::Connection> &conn) 
     conn_mutex.lock();
     connections.erase(conn);
     conn_mutex.unlock();
-}
-
-void Server::Connection::start() {
-
-    server.add_connection(shared_from_this());
-    read_msg = new char[5];
-    boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
-                            boost::bind(&Connection::handle_read_command, shared_from_this(),
-                                        boost::asio::placeholders::error));
 }
