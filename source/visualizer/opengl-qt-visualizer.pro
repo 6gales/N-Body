@@ -34,6 +34,7 @@ SOURCES += main.cpp\
     computer.cpp \
     main_window.cpp \
     my_opengl_widget.cpp \
+    palette.cpp \
     sequentialComputer.cpp
 
 HEADERS  += \
@@ -43,6 +44,7 @@ HEADERS  += \
     computer.h \
     main_window.h \
     my_opengl_widget.h \
+    palette.h \
     sequentialComputer.h \
 
 
@@ -51,8 +53,12 @@ FORMS    += \
 
 DISTFILES += \
     in.txt \
+    shaders/axis.frag \
+    shaders/axis.vert \
     shaders/basic.vert \
-    shaders/basic.frag
+    shaders/basic.frag \
+    shaders/planet.frag \
+    shaders/planet.vert
 
 COPIES += shaders
 

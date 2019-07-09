@@ -60,6 +60,24 @@
      <height>26</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuScale">
+    <property name="title">
+     <string>Scale</string>
+    </property>
+    <addaction name="actionPlanetary"/>
+    <addaction name="actionStellar"/>
+   </widget>
+   <widget class="QMenu" name="menuCommands">
+    <property name="title">
+     <string>Commands</string>
+    </property>
+    <addaction name="actionStart"/>
+    <addaction name="actionStop"/>
+    <addaction name="actionPause"/>
+    <addaction name="actionNext"/>
+   </widget>
+   <addaction name="menuCommands"/>
+   <addaction name="menuScale"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <property name="enabled">
@@ -80,6 +98,39 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionPlanetary">
+   <property name="text">
+    <string>Planetary</string>
+   </property>
+  </action>
+  <action name="actionStellar">
+   <property name="text">
+    <string>Stellar</string>
+   </property>
+  </action>
+  <action name="actionStart">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Start</string>
+   </property>
+  </action>
+  <action name="actionStop">
+   <property name="text">
+    <string>Stop</string>
+   </property>
+  </action>
+  <action name="actionPause">
+   <property name="text">
+    <string>Pause</string>
+   </property>
+  </action>
+  <action name="actionNext">
+   <property name="text">
+    <string>Resume</string>
    </property>
   </action>
  </widget>

@@ -1,10 +1,12 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QOpenGLFunctions>
 
 namespace Ui {
 class MainWindow;
 }
+class MyOpenGLWidget;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -14,9 +16,12 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_actionAbout_triggered();
+    void initGlWidget();
 
+    void on_actionPlanetary_triggered();
+    void on_actionStellar_triggered();
 private:
     Ui::MainWindow *ui;
+    MyOpenGLWidget *gl_widget;
 };
 

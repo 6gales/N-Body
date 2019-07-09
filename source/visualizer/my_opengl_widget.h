@@ -3,8 +3,10 @@
 #include <QOpenGLWidget>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
+#include <QOpenGLTexture>
 #include <QMatrix4x4>
 #include <QTimer>
+#include <QImage>
 #include <memory>
 #include <QMouseEvent>
 #include <QWheelEvent>
@@ -14,6 +16,7 @@
 #include <fstream>
 #include <ctime>
 #include "computer.h"
+#include "palette.h"
 
 class QOpenGLShaderProgram;
 
@@ -22,6 +25,9 @@ class MyOpenGLWidget : public QOpenGLWidget {
 
 public:
     explicit MyOpenGLWidget(QWidget *parent=nullptr);
+    void setPalette(std::vector<QVector3D> palette);
+    void setShaderProgram(bool palette);
+
     ~MyOpenGLWidget() override;
 
 protected:
@@ -33,22 +39,24 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *me) override;
     virtual void wheelEvent(QWheelEvent *qe) override;
     virtual void keyPressEvent(QKeyEvent *ke) override;
-
+signals:
+    void initialized();
 private:
     void initProgram();
     void initView();
     QVector3D fromParticle(const Particle &part);
     void fromParticleM(const Particle *part);
     void onTimer();
-
+    void initShaderProgram(std::shared_ptr<QOpenGLShaderProgram> *shpr, const QString &frag, const QString &vert);
 private:
-    std::shared_ptr<QOpenGLShaderProgram> program;
+    std::shared_ptr<QOpenGLShaderProgram> star, planet, axisP, program;
 
     QOpenGLVertexArrayObject vao, lao;
-    QOpenGLBuffer vertex_buffer, color_buffer, index_buffer,linev_buffer, linec_buffer, linex_buffer;
+    QOpenGLBuffer vertex_buffer, /*color_buffer,*/ index_buffer,mass_buffer,linev_buffer, linec_buffer, linex_buffer;
     QVector3D eye=QVector3D(1.0f,0.0f,0.0f);
     QVector3D * vertices,*speed;
     QMatrix4x4 model_matrix, view_matrix, projection_matrix;
+    QOpenGLTexture color_texture {QOpenGLTexture::Target1D};
     Computer* computer;
 
     bool pressedButton =false;
