@@ -31,6 +31,8 @@ public:
 
         inline tcp::socket& socket() { return sock; }
 
+        inline ull get_count() const { return count; }
+
         void start();
 
     private:
@@ -39,14 +41,15 @@ public:
         char* read_msg = nullptr;
         std::string send_msg;
         Server &server;
-        std::shared_ptr<Computer> computer{new ompComputer(4)};
+        std::shared_ptr<Computer> computer;
         std::vector<Particle> data_particle{};
         std::mutex mutex{};
         std::deque<std::string> send_queue{};
     };
 
-    Server(boost::asio::io_service &io_service, tcp::endpoint &endpoint) : acceptor(io_service, endpoint),
-                                                                            io_service(io_service) {
+    Server(boost::asio::io_service &io_service, tcp::endpoint &endpoint, size_t count_nodes) : acceptor{io_service, endpoint},
+                                                                            io_service{io_service}, count_nodes(count_nodes),
+                                                                            nodes_weights{count_nodes}, computers{count_nodes} {
         std::thread check_thread{[this]() {
             timer.async_wait([this](const boost::system::error_code &errorCode) {
                 this->check(errorCode);
@@ -70,6 +73,8 @@ public:
 
     void remove_connection(const std::shared_ptr<Server::Connection> &conn);
 
+    std::shared_ptr<Computer> balance_weight(ull weight);
+
     ~Server() = default;
 
 private:
@@ -78,10 +83,14 @@ private:
 
     void check(const boost::system::error_code &);
 
+    volatile int count_nodes;
+    const ull MAX_WEIGHT = 5000;
+    std::vector<std::shared_ptr<Computer>> computers;
     std::mutex conn_mutex{};
     std::set<std::shared_ptr<Connection>> connections{};
     boost::asio::io_service timer_service{};
     boost::asio::deadline_timer timer{timer_service, boost::posix_time::seconds{120}};
     boost::asio::io_service &io_service;
     tcp::acceptor acceptor;
+    std::vector<ull> nodes_weights;
 };

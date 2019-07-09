@@ -44,6 +44,7 @@ void Server::Connection::handle_read_command(const boost::system::error_code &er
 
 void Server::Connection::handle_read_count(const boost::system::error_code &er) {
     if (!er) {
+        computer = server.balance_weight(count);
         std::string str_msg{read_msg, 8};
         count = (((ull)str_msg.at(0) << 56) & 0xFF00000000000000) | (((ull)str_msg.at(1) << 48) & 0x00FF000000000000) | (((ull)str_msg.at(2) << 40) & 0x0000FF0000000000)
                               | (((ull)str_msg.at(3) << 32) & 0x000000FF00000000) | (((ull)str_msg.at(4) << 24) & 0x00000000FF000000) | (((ull)str_msg.at(5) << 16) & 0x0000000000FF0000)
@@ -116,9 +117,7 @@ void Server::check(const boost::system::error_code &er) {
 
 void Server::start_working() {
     std::shared_ptr<Connection> connection(new Connection(io_service, *this));
-    acceptor.async_accept(connection->socket(), [this, connection](const boost::system::error_code &error_code) {
-        this->handle(connection, error_code);
-    });
+    acceptor.async_accept(connection->socket(), boost::bind(&Server::handle, this, connection, boost::asio::placeholders::error));
 }
 
 void Server::handle(std::shared_ptr<Connection> connection, const boost::system::error_code &error_code) {
@@ -138,4 +137,16 @@ void Server::remove_connection(const std::shared_ptr<Server::Connection> &conn) 
     conn_mutex.lock();
     connections.erase(conn);
     conn_mutex.unlock();
+}
+
+std::shared_ptr<Computer> Server::balance_weight(ull weight) {
+
+//    if (weight > MAX_WEIGHT*3/2) return new ompComputer{(weight / MAX_WEIGHT)+ 1};
+//    else return new SequentialComputer{};
+    for (int i = 0; i < count_nodes; ++i) {
+        if (computers[i].get() == nullptr) {
+            computers[i] = std::shared_ptr<Computer>(new SequentialComputer());
+            return computers[i];
+        }
+    }
 }
