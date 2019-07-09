@@ -1,7 +1,8 @@
-#include "computer.h"
+//#include "computer.h"
 #include <fstream>
 #include <memory>
 #include <iostream>
+#include "sequentialBHComputer.h"
 
 
 int main()
@@ -9,7 +10,7 @@ int main()
 	std::ifstream in("in.txt");
 	std::ofstream out("out.txt");
 
-	Computer* computer = new SequentialComputer();//new ompComputer(4);
+	Computer* computer = new SequentialBHComputer();//new ompComputer(4);
 	int N;
 	in >> N;
 
@@ -26,11 +27,14 @@ int main()
 	in.close();
 
 	computer->init(parts, N);
+	std::cout << " after init" << std::endl;
 
 	for(int iter = 0; iter < 1000; ++iter)
 	{
 		out << "====================ITERATION "<< iter <<"====================="<< std::endl;
+		std::cout << "before iterate" << std::endl;
 		auto buff = computer->iterate();
+		std::cout << "after iterate" << std::endl;
 		for(int i = 0; i < N; ++i)
 		{
 			//std::cout << buff[i] << std::endl;

@@ -1,0 +1,37 @@
+#pragma once
+
+#include "Particle.h"
+#include "OctTreeNode.h"
+#include <vector>
+#include <bits/shared_ptr.h>
+#include "computer.h"
+
+class OctTree
+{
+private:
+	std::shared_ptr<OctTreeNode> root;
+
+	void populate(std::vector<Particle> & parts, const Domain3D &domain);
+	Domain3D getExpandedDomain(const std::vector<Particle> &parts, const Domain3D &domain) const;
+
+public:
+	OctTree(std::vector<Particle>& parts, const Domain3D &domain) : root(0)
+	{
+		std::cout << "before populate" << std::endl;
+		populate(parts, domain);
+		std::cout << "after populate" << std::endl;
+	}
+	~OctTree(){}
+
+	int getHeight() const
+	{
+		return root->getHeight();
+	}
+
+	int getSize() const
+	{
+		return root->getSize();
+	}
+
+	Vector3D computeForce(Particle* part, const double& theta) const;
+};
