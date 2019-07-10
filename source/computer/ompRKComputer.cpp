@@ -53,7 +53,7 @@ void ompRKComputer::init(std::vector<Particle> &particles, ull _N)
 	N = _N;
 	forces = new Vector3D*[N];
 
-#pragma omp parallel for
+	#pragma omp parallel for
 	for(ull i = 0; i < N; ++i)
 	{
 		forces[i] = new Vector3D[N];
