@@ -17,9 +17,7 @@ private:
 public:
 	OctTree(std::vector<Particle>& parts, const Domain3D &domain) : root(0)
 	{
-		std::cout << "before populate" << std::endl;
 		populate(parts, domain);
-		std::cout << "after populate" << std::endl;
 	}
 	~OctTree(){}
 

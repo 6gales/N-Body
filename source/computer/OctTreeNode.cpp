@@ -7,7 +7,6 @@ void OctTreeNode::insertPart(Particle *_part)
 {
 	if(isEmpty)
 	{
-		std::cout << "insert false "<< std::endl;
 		std::cout << _part->coords << std::endl;
 		isEmpty = false;
 		part = _part;
@@ -16,7 +15,6 @@ void OctTreeNode::insertPart(Particle *_part)
 	{
 		if(part)
 		{
-			std::cout << "Part exist " << _part->coords << std::endl;
 			Particle* old = part;
 			part = nullptr;
 			getChild(old->coords)->insertPart(old);
@@ -24,7 +22,6 @@ void OctTreeNode::insertPart(Particle *_part)
 		}
 		else
 		{
-			std::cout << "Part doesn't exist" << _part->coords << std::endl;
 			getChild(_part->coords)->insertPart(_part);
 		}
 	}
@@ -95,52 +92,42 @@ int OctTreeNode::getSize() const
 
 Vector3D OctTreeNode::computeForce(Particle* part1, const Particle* part2) const
 {
-	std::cout << part1->coords << " " << part2->coords << " " << part1->mass << " " << part2->mass << std::endl;
 	Vector3D delta = part2->coords - part1->coords;
 	double module  = delta.module();
-	return (6.67*1.0e-11 * part1->mass * part2->mass / module / module / module) * delta;
+	return (6.67 * 1.0e-11 * part1->mass * part2->mass / module / module / module) * delta;
 }
 
 
 Vector3D OctTreeNode::computeForce(Particle* target, const double &theta) const
 {
-	std::cout << "compute Force in Node" << std::endl;
 	if(isEmpty || (part == target))
 	{
-		std::cout << "in empty return " << Vector3D(0.0, 0.0, 0.0) << std::endl;
 		return Vector3D(0.0, 0.0, 0.0);
 	}
 	if(part)
 	{
-		std::cout << "part has 1 part" << std::endl;
 		Vector3D result = computeForce(target, part);
-		std::cout << "Force between " << part->coords << " " << target->coords << " " << result << std::endl;
 		return result;
 	}
 	else
 	{
-		std::cout << "more than 1 part in domain" << std::endl;
 		Vector3D delta = target->coords - massCenter.coords;
 		const double dist = delta.module() + 1.0e-8;
 		if(std::max({domain.height(), domain.width(), domain.depth()}) / dist < theta)
 		{
-			std::cout << "condition is ok" << std::endl;
 			Vector3D result = computeForce(target, &massCenter);
-			std::cout << "force between object and massCenter" << target->coords << " " << massCenter.coords << " " <<  result << std::endl;
 			return result;
 		}
 		else
 		{
-			std::cout << "condition is not ok" << std::endl;
 			Vector3D force(0.0, 0.0, 0.0);
 			for(int i = 0; i < NUM_OF_CHILDREN; ++i)
 			{
-				if(children[i].get())
+				if (children[i].get())
 				{
 					force += children[i]->computeForce(target, theta);
 				}
 			}
-			std::cout << "return summ of forces of subtrees" << target->coords << " " << force << std::endl;
 			return force;
 		}
 	}
