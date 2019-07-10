@@ -3,8 +3,11 @@
 #include <deque>
 #include <cmath>
 #include <fstream>
-#include "Particle.h"
-#include "Vector3D.h"
+#include <mutex>
+#include <condition_variable>
+#include <thread>
+#include "../Particle/Particle.h"
+#include "../Vector3D/Vector3D.h"
 #include "mpi.h"
 #include "boost/asio.hpp"
 #include "boost/bind.hpp"
@@ -528,38 +531,11 @@ int main(int argc, char **argv)
 
 			mutex.unlock();
 		}
-		iterate(counts, shifts, particles, N);
+		//iterate(counts, shifts, particles, N);
 
-		if (localRank == 0)
-			notFinished = communicate();
 
 		MPI_Bcast(&notFinished, 1, MPI_CHAR, 0, MPI_COMM_WORLD);
 	}
-
-//	for(int iter = 0; iter < 1; ++iter)
-//	{
-//		auto buff = iterate(counts, shifts, particles, N);
-//
-//		if (localRank == 0)
-//		{
-//			std::cout << "====================ITERATION " << iter << "=====================" << std::endl;
-//
-//			for (int i = 0; i < N; ++i)
-//			{
-//				//std::cout << buff[i] << std::endl;
-//				std::cout << buff[i] << std::endl;
-//			}
-//			std::cout << "====================ITERATION " << iter << "=====================" << std::endl << std::endl;
-//		}
-//		MPI_Barrier(MPI_COMM_WORLD);
-//	}
-//
-//	if (!localRank)
-//	{
-////		out.close();
-//		std::cout << "0 closed\n";
-//	}
-//	std::cout << localRank << " finished\n";
 
 
 	delete sock;
