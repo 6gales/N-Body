@@ -6,6 +6,10 @@
 
 using namespace boost::asio::ip;
 
+std::mutex Server::keys_mutex{};
+unsigned int Server::keys = 0;
+std::deque<unsigned int> Server::free_keys{};
+
 void Server::Connection::write_message(const std::string &msg) {
     mutex.lock();
     send_queue.push_back(msg);
@@ -25,14 +29,24 @@ void Server::Connection::handle_read_command(const boost::system::error_code &er
                     boost::bind(&Connection::handle_read_count, shared_from_this(), boost::asio::placeholders::error));
         } else {
             if (!strncmp(read_msg, "NEXT ", 5)) {
-                data_particle = computer->iterate();
-                std::string msg = convert_particles_to_msg(data_particle);
+                if (computer == nullptr) {
+                    server.remove_connection(shared_from_this());
+                    delete read_msg;
+                    return;
+                }
+                data_particle = computer.get()->iterate();
+                if (data_particle.empty()) {
+                    computer = server.search_computer(key);
+                    data_particle = computer.get()->iterate();
+                }
+                std::string msg = convert_particles_to_msg(data_particle, count);
                 write_message(msg);
             } else if (!strncmp(read_msg, "STOP ", 5)) {
                 server.remove_connection(shared_from_this());
+                delete read_msg;
                 return;
             } else if (!strncmp(read_msg, "PAUSE", 5)) {
-
+                //wait command "next"
             }
             boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
                     boost::bind(&Connection::handle_read_command, shared_from_this(), boost::asio::placeholders::error));
@@ -44,7 +58,7 @@ void Server::Connection::handle_read_command(const boost::system::error_code &er
 
 void Server::Connection::handle_read_count(const boost::system::error_code &er) {
     if (!er) {
-        computer = server.balance_weight(count);
+        computer = server.create_computer(count);
         std::string str_msg{read_msg, 8};
         count = (((ull)str_msg.at(0) << 56) & 0xFF00000000000000) | (((ull)str_msg.at(1) << 48) & 0x00FF000000000000) | (((ull)str_msg.at(2) << 40) & 0x0000FF0000000000)
                               | (((ull)str_msg.at(3) << 32) & 0x000000FF00000000) | (((ull)str_msg.at(4) << 24) & 0x00000000FF000000) | (((ull)str_msg.at(5) << 16) & 0x0000000000FF0000)
@@ -61,9 +75,13 @@ void Server::Connection::handle_read_count(const boost::system::error_code &er) 
 void Server::Connection::handle_read_data(const boost::system::error_code &er) {
     if (!er) {
         data_particle = parse_start_message(read_msg, count);
-        computer->init(data_particle, count);
-        computer->iterate();
-        std::string msg = convert_particles_to_msg(data_particle);
+        computer.get()->init(data_particle, count);
+        data_particle = computer.get()->iterate();
+        if (data_particle.empty()) {
+            computer = server.search_computer(key);
+            data_particle = computer.get()->iterate();
+        }
+        std::string msg = convert_particles_to_msg(data_particle, count);
         write_message(msg);
         delete[] read_msg;
         read_msg = new char[5];
@@ -90,7 +108,6 @@ void Server::Connection::handle_write_message(const boost::system::error_code &e
 }
 
 void Server::Connection::start() {
-
     server.add_connection(shared_from_this());
     read_msg = new char[5];
     boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
@@ -123,8 +140,10 @@ void Server::start_working() {
 void Server::handle(std::shared_ptr<Connection> connection, const boost::system::error_code &error_code) {
     if (!error_code) {
         connection->start();
+        this->start_working();
+    } else {
+        std::cerr << "client couldn't connect, reason: " << error_code.message() << std::endl;
     }
-    this->start_working();
 }
 
 void Server::add_connection(const std::shared_ptr<Server::Connection> &conn) {
@@ -135,18 +154,56 @@ void Server::add_connection(const std::shared_ptr<Server::Connection> &conn) {
 
 void Server::remove_connection(const std::shared_ptr<Server::Connection> &conn) {
     conn_mutex.lock();
+    if (connections.find(conn) == connections.end()) {
+        conn_mutex.unlock();
+        return;
+    }
+    unsigned int key = connections.find(conn)->get()->get_key();
     connections.erase(conn);
     conn_mutex.unlock();
+    add_new_free_key(key);
 }
 
-std::shared_ptr<Computer> Server::balance_weight(ull weight) {
-
-//    if (weight > MAX_WEIGHT*3/2) return new ompComputer{(weight / MAX_WEIGHT)+ 1};
-//    else return new SequentialComputer{};
-    for (int i = 0; i < count_nodes; ++i) {
-        if (computers[i].get() == nullptr) {
-            computers[i] = std::shared_ptr<Computer>(new SequentialComputer());
-            return computers[i];
+std::shared_ptr<Computer> Server::create_computer(ull weight) {
+    comp_mutex.lock();
+    //TODO create balance
+    for (auto & computer : computers) {
+        if (computer == nullptr) {
+            computer = std::shared_ptr<Computer>(new ompComputer(4));
+            comp_mutex.unlock();
+            return computer;
+        } else if (computer->getSize() > MAX_WEIGHT) {
+            continue;
         }
     }
+    comp_mutex.unlock();
+    MAX_WEIGHT += MAX_WEIGHT;
+    return computers[0];
+//    return create_computer(weight);
+}
+
+void Server::add_new_free_key(unsigned int key) {
+    keys_mutex.lock();
+    free_keys.push_back(key);
+    keys_mutex.unlock();
+}
+
+unsigned int Server::gen_new_key() {
+    keys_mutex.lock();
+    if (!free_keys.empty()) {
+        unsigned int key = free_keys.front();
+        free_keys.pop_front();
+        keys_mutex.unlock();
+        return key;
+    }
+    keys_mutex.unlock();
+    return ++keys;
+}
+
+std::shared_ptr<Computer> Server::search_computer(unsigned int key) {
+    comp_mutex.lock();
+    for (auto &comp : computers) {
+        //TODO search by key
+    }
+    comp_mutex.unlock();
 }

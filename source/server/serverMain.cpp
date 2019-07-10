@@ -5,9 +5,9 @@ using namespace boost::asio::ip;
 
 int main(int argc, char *argv[]) {
     try {
-        const auto ip_address = (argc > 1 ? std::string{argv[1]} : std::string{"0.0.0.0"});
-        const unsigned short port = (argc > 2 ? static_cast<unsigned short>(std::stoi(argv[2])) : 1234);
-        const size_t count_nodes = (argc > 3 ? std::stoull(argv[3]) : 1);
+        const size_t count_nodes = (argc > 1 ? std::stoull(argv[1]) : 1);
+        const auto ip_address = (argc > 2 ? std::string{argv[2]} : std::string{"0.0.0.0"});
+        const unsigned short port = (argc > 3 ? static_cast<unsigned short>(std::stoi(argv[3])) : 1234);
 
         boost::asio::io_service io_service;
         tcp::endpoint ep{address::from_string(ip_address), port};
