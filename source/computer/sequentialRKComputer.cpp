@@ -70,9 +70,9 @@ void SequentialRKComputer::init(std::vector<Particle> &particles, ull _N)
 
 const std::vector<Particle> &SequentialRKComputer::iterate()
 {
-	//fillForces();
 	std::vector<Vector3D> xBuffer(N);
-	std::vector<std::vector<Vector3D>> coef(4, std::vector<Vector3D>(N));
+	std::vector<std::vector<Vector3D>> accCoef(4, std::vector<Vector3D>(N));
+	std::vector<std::vector<Vector3D>> velCoef(3, std::vector<Vector3D>(N));
 
 	for(size_t k = 0; k < 4; ++k)
 	{
@@ -87,11 +87,15 @@ const std::vector<Particle> &SequentialRKComputer::iterate()
 
 		for(ull i = 0; i < N; ++i)
 		{
-			coef[k][i] = getAcc(i);
+			accCoef[k][i] = getAcc(i);
 			if(k != 3)
 			{
 				xBuffer[i] = particleVectors[previous][i].coords + particleVectors[previous][i].vel * (dt / 2.0)
-							 + coef[k][i] * (dt * dt / 2.0 / 2.0 / 2.0);
+							 + accCoef[k][i] * (dt * dt / 2.0 / 2.0 / 2.0);
+			}
+			if(k != 0)
+			{
+				velCoef[k - 1][i] = particleVectors[previous][i].coords + (dt / 2) * accCoef[k - 1][i];
 			}
 		}
 	}
@@ -99,9 +103,10 @@ const std::vector<Particle> &SequentialRKComputer::iterate()
 	for(ull i = 0; i < N; ++i)
 	{
 		Vector3D newVel = particleVectors[previous][i].vel
-						+ (dt / 6.0)* (coef[0][i] + 2.0 * coef[1][i] + 2.0 * coef[2][i] + coef[3][i]);
+						+ (dt / 6.0)* (accCoef[0][i] + 2.0 * accCoef[1][i] + 2.0 * accCoef[2][i] + accCoef[3][i]);
 		particleVectors[current][i].vel = newVel;
-		particleVectors[current][i].coords = particleVectors[previous][i].coords + (dt) * newVel;
+		particleVectors[current][i].coords = particleVectors[previous][i].coords + (dt / 6) *
+				(particleVectors[previous][i].vel + 2.0 * velCoef[0][i] + 2.0 * velCoef[1][i] + velCoef[2][i]);
 	}
 
 	previous ^= 1;
