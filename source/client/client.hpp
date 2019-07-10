@@ -21,6 +21,10 @@ public:
 
     void handle_read_command(const boost::system::error_code &er);
 
+    void handle_read_count(const boost::system::error_code &er);
+
+    void handle_buffered_read(const boost::system::error_code &er);
+
     void handle_read_data(const boost::system::error_code &er);
 
     void handle_write_msg(const boost::system::error_code &er);

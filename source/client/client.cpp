@@ -50,8 +50,8 @@ void Client::handle_read_command(const boost::system::error_code &er) {
     if (!er) {
 //        std::cerr << std::string{read_msg} << std::endl;
         if (!strncmp(read_msg, "DATA ", 5)) {
-            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*count),
-                  boost::bind(&Client::handle_read_data, this, boost::asio::placeholders::error));
+            boost::asio::async_read(sock, boost::asio::buffer(read_msg, 8),
+                  boost::bind(&Client::handle_read_count, this, boost::asio::placeholders::error));
         } else if (!strncmp(read_msg, "CHECK", 5)) {
             write_msg(std::string{"ALIVE"});
             boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
@@ -62,12 +62,49 @@ void Client::handle_read_command(const boost::system::error_code &er) {
     }
 }
 
+void Client::handle_read_count(const boost::system::error_code &er) {
+    if (!er) {
+        std::string str_msg{read_msg, 8};
+        count = (((ull)str_msg.at(0) << 56) & 0xFF00000000000000) | (((ull)str_msg.at(1) << 48) & 0x00FF000000000000) | (((ull)str_msg.at(2) << 40) & 0x0000FF0000000000)
+                                     | (((ull)str_msg.at(3) << 32) & 0x000000FF00000000) | (((ull)str_msg.at(4) << 24) & 0x00000000FF000000) | (((ull)str_msg.at(5) << 16) & 0x0000000000FF0000)
+                                     | (((ull)str_msg.at(6) << 8) & 0x000000000000FF00) | ((ull)str_msg.at(7) & 0x00000000000000FF);
+        if (count <= 10000) next();
+        if (count > 10000) {
+            count -= 10000;
+            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*10000),
+                  boost::bind(&Client::handle_buffered_read, this, boost::asio::placeholders::error));
+        } else {
+            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*count),
+                  boost::bind(&Client::handle_read_data, this, boost::asio::placeholders::error));
+        }
+    } else {
+
+    }
+}
+
+void Client::handle_buffered_read(const boost::system::error_code &er) {
+    if (!er) {
+        auto particles = parse_data_msg(read_msg, 10000);
+        push_back(particles);
+        if (count <= 10000) next();
+        if (count > 10000) {
+            count -= 10000;
+            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*10000),
+                  boost::bind(&Client::handle_buffered_read, this, boost::asio::placeholders::error));
+        } else {
+            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*count),
+                  boost::bind(&Client::handle_read_data, this, boost::asio::placeholders::error));
+        }
+    } else {
+
+    }
+}
+
 void Client::handle_read_data(const boost::system::error_code &er) {
     if (!er) {
 //        std::cerr << std::string(read_msg).size() << std::endl;
         auto particles = parse_data_msg(read_msg, count);
         push_back(particles);
-        next();
         boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
               boost::bind(&Client::handle_read_command, this, boost::asio::placeholders::error));
     } else {

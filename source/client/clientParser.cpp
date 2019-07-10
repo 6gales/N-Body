@@ -1,14 +1,6 @@
-#include <string>
-#include <iostream>
-#include <cstring>
-#include <vector>
-#include "Particle.h"
+#include "clientParser.hpp"
 #include "IOException.hpp"
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <bitset>
-
-using ull = unsigned long long;
+#include <cstring>
 
 ull parse_file(std::istream &data_file, std::string &start_message, std::vector<float> &particles_mass) {
     start_message.append("START", 5);
