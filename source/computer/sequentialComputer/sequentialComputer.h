@@ -1,5 +1,5 @@
 #pragma once
-#include "abstractComputer.h"
+#include "../abstractComputer.h"
 #include <memory>
 
 class SequentialComputer : public Computer
