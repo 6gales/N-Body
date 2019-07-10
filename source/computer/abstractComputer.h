@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
-#include "Particle.h"
+#include "Particle/Particle.h"
 
 using ull = unsigned long long;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "abstractComputer.h"
+#include "../abstractComputer.h"
 #include "omp.h"
 
 class ompComputer : public Computer
