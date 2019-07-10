@@ -6,11 +6,9 @@ class SequentialComputer : public Computer
 {
 private:
 	Vector3D** forces;
-
+	Task *t;
 	void fillForces();
 
 public:
-	void init(std::vector<Particle> &, ull);
-	const std::vector<Particle> &iterate();
-	~SequentialComputer();
+	const std::vector<Particle> &iterate(int);
 };
