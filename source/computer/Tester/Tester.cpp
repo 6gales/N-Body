@@ -1,6 +1,8 @@
 #include <fstream>
 #include <iostream>
-#include "../computer.h"
+#include <sys/time.h>
+//#include "../computer.h"
+#include "../N_square/sequentialComputer/sequentialComputer.h"
 
 int main(int argc, char* argv[])
 {
@@ -26,7 +28,24 @@ int main(int argc, char* argv[])
 
 	Task ptrTask(N, array);
 
+	struct timeval t1, t2;
 
+	std::shared_ptr<Computer> computer{new SequentialComputer(sequentialComputer)};
+	computer.get()->add(0, array, N);
+
+	gettimeofday(&t1, nullptr);
+
+	for(ull i = 0; i < iterations; ++i)
+	{
+		computer.get()->iterate(0);
+	}
+	gettimeofday(&t2, nullptr);
+
+	double time = (t2.tv_sec - t1.tv_sec) + ((double)(t2.tv_usec - t1.tv_usec))/1000000;
+
+	std::cout << "Name: " << argv[0] << std::endl
+			<< "Iterations: " << iterations << std::endl
+			<< "Time: " << time << " sec." << std::endl;
 
 	return 0;
 }
