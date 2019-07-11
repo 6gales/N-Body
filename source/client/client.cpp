@@ -17,8 +17,8 @@ Client::Client(std::string host, unsigned short port, std::ifstream& data_file)
     auto ep = resolver.resolve(host, std::to_string(port));
 
     std::string start_msg;
-    count = parse_file(data_file, start_msg, particles_mass);
-    if (count == 0) {
+    COUNT = parse_file(data_file, start_msg, particles_mass);
+    if (COUNT == 0) {
         //TODO kill client
     }
     boost::asio::async_connect(sock, ep,
@@ -38,7 +38,7 @@ void Client::write_msg(const std::string msg) {
 
 void Client::handle_connect(const boost::system::error_code &er) {
     if (!er) {
-        read_msg = new char[sizeof(float)*4*count];
+        read_msg = new char[sizeof(float)*4*5000];
         boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
                                 boost::bind(&Client::handle_read_command, this, boost::asio::placeholders::error));
     } else {
@@ -65,16 +65,16 @@ void Client::handle_read_command(const boost::system::error_code &er) {
 void Client::handle_read_count(const boost::system::error_code &er) {
     if (!er) {
         std::string str_msg{read_msg, 8};
-        count = (((ull)str_msg.at(0) << 56) & 0xFF00000000000000) | (((ull)str_msg.at(1) << 48) & 0x00FF000000000000) | (((ull)str_msg.at(2) << 40) & 0x0000FF0000000000)
+        part_count = (((ull)str_msg.at(0) << 56) & 0xFF00000000000000) | (((ull)str_msg.at(1) << 48) & 0x00FF000000000000) | (((ull)str_msg.at(2) << 40) & 0x0000FF0000000000)
                                      | (((ull)str_msg.at(3) << 32) & 0x000000FF00000000) | (((ull)str_msg.at(4) << 24) & 0x00000000FF000000) | (((ull)str_msg.at(5) << 16) & 0x0000000000FF0000)
                                      | (((ull)str_msg.at(6) << 8) & 0x000000000000FF00) | ((ull)str_msg.at(7) & 0x00000000000000FF);
-        if (count <= 10000) next();
-        if (count > 10000) {
-            count -= 10000;
-            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*10000),
+        if (part_count == (COUNT - (((COUNT/5000+1)/2)*5000))) next();
+        if (part_count >= 5000) {
+            part_count -= 5000;
+            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*5000),
                   boost::bind(&Client::handle_buffered_read, this, boost::asio::placeholders::error));
         } else {
-            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*count),
+            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*part_count),
                   boost::bind(&Client::handle_read_data, this, boost::asio::placeholders::error));
         }
     } else {
@@ -84,15 +84,15 @@ void Client::handle_read_count(const boost::system::error_code &er) {
 
 void Client::handle_buffered_read(const boost::system::error_code &er) {
     if (!er) {
-        auto particles = parse_data_msg(read_msg, 10000);
+        auto particles = parse_data_msg(read_msg, 5000);
         push_back(particles);
-        if (count <= 10000) next();
-        if (count > 10000) {
-            count -= 10000;
-            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*10000),
+        if (part_count == (COUNT - (((COUNT/5000+1)/2)*5000))) next();
+        if (part_count >= 5000) {
+            part_count -= 5000;
+            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*5000),
                   boost::bind(&Client::handle_buffered_read, this, boost::asio::placeholders::error));
         } else {
-            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*count),
+            boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*4*part_count),
                   boost::bind(&Client::handle_read_data, this, boost::asio::placeholders::error));
         }
     } else {
@@ -103,7 +103,7 @@ void Client::handle_buffered_read(const boost::system::error_code &er) {
 void Client::handle_read_data(const boost::system::error_code &er) {
     if (!er) {
 //        std::cerr << std::string(read_msg).size() << std::endl;
-        auto particles = parse_data_msg(read_msg, count);
+        auto particles = parse_data_msg(read_msg, part_count);
         push_back(particles);
         boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
               boost::bind(&Client::handle_read_command, this, boost::asio::placeholders::error));
@@ -175,7 +175,7 @@ const std::vector<float> &Client::get_particles_mass() const {
 }
 
 ull Client::get_count() const {
-    return count;
+    return COUNT;
 }
 
 void Client::stop() {

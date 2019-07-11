@@ -62,7 +62,8 @@ public:
     }
 
 private:
-    volatile unsigned long long count = 0;
+    mutable unsigned long long COUNT;
+    volatile unsigned long long part_count = 0;
     char* read_msg;
     ParticlesDeque deq{};
     boost::asio::io_service io_service{};
