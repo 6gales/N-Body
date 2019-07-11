@@ -1,10 +1,10 @@
 #include "mpiComputer.h"
 
-mpiComputer::mpiComputer(ComputerType type, size_t threads) : Computer(type)
+mpiComputer::mpiComputer(ComputerType type, size_t threadsNum) : Computer(type, threadsNum)
 {
 	std::string command = "launch.sh";
-	command.append(" " + std::to_string(threads));// + " ")add ip addr and port
-	system(command.c_str());
+	command.append(" " + std::to_string(threadsNum));// + " ")add ip addr and port
+	std::system(command.c_str());
 }
 
 const std::vector<Particle>& mpiComputer::iterate(int key)
