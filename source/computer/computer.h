@@ -1,9 +1,13 @@
 #pragma once
-#include "abstractComputer.h"
-#include "sequentialComputer.h"
-#include "ompComputer.h"
 
-Computer* getInstanceOf(size_t threads)
-{
-	return new SequentialComputer();
-}
+#include <memory>
+#include "abstractComputer.h"
+#include "sequentialComputer/sequentialComputer.h"
+#include "sequentialRKComputer/sequentialRKComputer.h"
+#include "sequentialBHComputer/sequentialBHComputer.h"
+#include "ompComputer/ompComputer.h"
+#include "ompRKComputer/ompKComputer.h"
+//#include "mpiComputer/mpiComputer.h"
+#include "ComputerType.h"
+
+std::shared_ptr<Computer> getInstanceOf(ComputerType type, size_t threads);
