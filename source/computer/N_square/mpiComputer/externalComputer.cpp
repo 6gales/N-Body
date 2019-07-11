@@ -9,8 +9,8 @@
 #include "mpi.h"
 #include "boost/asio.hpp"
 #include "boost/bind.hpp"
-#include "../Particle/Particle.h"
-#include "../Vector3D/Vector3D.h"
+#include "../../Particle/Particle.h"
+#include "../../Vector3D/Vector3D.h"
 
 using namespace boost::asio::ip;
 using namespace boost;

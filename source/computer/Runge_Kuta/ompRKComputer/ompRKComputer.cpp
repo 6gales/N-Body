@@ -46,7 +46,7 @@ void OMPRKComputer::fillForces(std::vector<Vector3D> coords)
 	}
 }
 
-std::vector<Particle> ompRKComputer::iterate(int key)
+std::vector<Particle> OMPRKComputer::iterate(int key)
 {
 	containersm.lock();
 
@@ -115,11 +115,13 @@ std::vector<Particle> ompRKComputer::iterate(int key)
 	return result;
 }
 
+#pragma omp declare reduction(Vector3DMinus: Vector3D: omp_out -= omp_in)
+
 Vector3D OMPRKComputer::getAcc(ull i)
 {
 	Vector3D F;
 
-	#pragma omp parallel for schedule(dynamic) reduction(-:F)
+	#pragma omp parallel for schedule(dynamic) reduction(Vector3DMinus:F)
 	for(ull j = 0; j < t->N; ++j)
 	{
 		F -= forces[i][j];
