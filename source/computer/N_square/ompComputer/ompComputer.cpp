@@ -1,6 +1,6 @@
 #include "ompComputer.h"
 
-void ompComputer::fillForces()
+void OMPComputer::fillForces()
 {
 	#pragma omp parallel for schedule(dynamic)
 	for(ull i = 0; i < t->N; ++i)
@@ -23,10 +23,8 @@ void ompComputer::fillForces()
 	}
 }
 
-std::vector<Particle> ompComputer::iterate(int key)
+std::vector<Particle> OMPComputer::iterate(int key)
 {
-
-	//как оно будет работать с очередью?
 	containersm.lock();
 
 	t = &tasks.find(key)->second;

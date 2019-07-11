@@ -1,6 +1,6 @@
 #pragma once
 #include "OctTree.h"
-#include "../abstractComputer.h"
+#include "../../abstractComputer.h"
 #include <memory>
 
 
