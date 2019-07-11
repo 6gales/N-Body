@@ -10,5 +10,5 @@ private:
 	void fillForces();
 
 public:
-	const std::vector<Particle> &iterate(int);
+	std::vector<Particle> iterate(int);
 };

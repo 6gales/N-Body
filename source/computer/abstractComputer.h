@@ -15,8 +15,6 @@ struct Task
 	char previous = 1,
 			current = 0;
 
-	std::mutex mutex;
-
 	Task(ull _N, const std::vector<Particle> &parts) : N{_N}
 	{
 		particleVectors[0] = parts;
@@ -48,7 +46,6 @@ protected:
 
 	std::mutex containersm;
 	std::map<int, Task> tasks;
-	std::deque<int> orders;
 
 	ull weight = 0;
 
@@ -60,7 +57,7 @@ public:
 		containersm.unlock();
 	}
 
-	virtual const std::vector <Particle>& iterate(int) = 0;
+	virtual std::vector <Particle> iterate(int) = 0;
 
 	void remove(int key)
 	{
@@ -76,12 +73,10 @@ public:
 			containersm.unlock();
 			return std::make_pair(key, Task{0, std::vector<Particle>{}});
 		}
-		rem->second.mutex.lock();
 		weight -= rem->second.N;
 
 		std::pair<int, Task> res = *rem;
 
-		rem->second.mutex.unlock();
 		tasks.erase(rem);
 		containersm.unlock();
 
