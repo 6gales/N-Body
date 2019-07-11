@@ -11,9 +11,9 @@ private:
 	void fillForces();
 
 public:
-	OMPComputer(ComputerType type, size_t numThreads) : Computer(type)
+	OMPComputer(ComputerType type, size_t threadsNum) : Computer(type, threadsNum)
 	{
-		omp_set_num_threads(numThreads);
+		omp_set_num_threads(threadsNum);
 		forces = nullptr;
 	}
 	std::vector<Particle> iterate(int key);

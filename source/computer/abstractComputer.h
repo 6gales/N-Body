@@ -42,6 +42,7 @@ struct Task
 class Computer
 {
 	const ComputerType type;
+	const size_t threadNum;
 
 protected:
 	double gravity = 6.67408e-11;
@@ -53,10 +54,12 @@ protected:
 	ull weight = 0;
 
 public:
-	Computer(ComputerType _type) : type{ _type }
+	Computer(ComputerType _type, size_t _threadNum) : type{ _type }, threadNum{ _threadNum }
 	{}
 
 	ComputerType getType() { return type; }
+
+	size_t getThreadNum() { return threadNum; }
 
 	void add(int key, std::vector<Particle> &particles, ull N)
 	{

@@ -10,7 +10,7 @@ private:
 	void fillForces();
 
 public:
-	SequentialComputer(ComputerType type) : Computer(type) {}
+	SequentialComputer(ComputerType type) : Computer(type, 1) {}
 
 	std::vector<Particle> iterate(int);
 };
