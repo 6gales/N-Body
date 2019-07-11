@@ -64,6 +64,7 @@ public:
 	void add(int key, std::vector<Particle> &particles, ull N)
 	{
 		containersm.lock();
+		weight += N;
 		tasks.emplace(key, N, particles);
 		containersm.unlock();
 	}
