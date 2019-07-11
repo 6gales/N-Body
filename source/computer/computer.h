@@ -6,7 +6,7 @@
 #include "sequentialRKComputer/sequentialRKComputer.h"
 #include "sequentialBHComputer/sequentialBHComputer.h"
 #include "ompComputer/ompComputer.h"
-#include "ompRKComputer/ompRKComputer.h"
+#include "ompRKComputer/ompKComputer.h"
 #include "mpiComputer/mpiComputer.h"
 #include "ComputerType.h"
 

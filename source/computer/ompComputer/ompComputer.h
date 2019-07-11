@@ -3,7 +3,7 @@
 #include "../abstractComputer.h"
 #include "omp.h"
 
-class ompComputer : public Computer
+class OMPComputer : public Computer
 {
 private:
 	Vector3D** forces;
@@ -11,7 +11,7 @@ private:
 	void fillForces();
 
 public:
-	ompComputer(size_t numThreads)
+	OMPComputer(ComputerType type, size_t numThreads) : Computer(type)
 	{
 		omp_set_num_threads(numThreads);
 		forces = nullptr;

@@ -3,7 +3,7 @@
 #include "../abstractComputer.h"
 #include "omp.h"
 
-class ompRKComputer : public Computer
+class OMPRKComputer : public Computer
 {
 private:
 	Vector3D** forces;
@@ -13,7 +13,7 @@ private:
 	Vector3D getAcc(ull i);
 
 public:
-	ompRKComputer(size_t numThreads)
+	OMPRKComputer(size_t numThreads)
 	{
 		omp_set_num_threads(numThreads);
 		forces = nullptr;

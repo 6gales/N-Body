@@ -1,4 +1,4 @@
-#include "ompRKComputer.h"
+#include "ompKComputer.h"
 
 void ompRKComputer::fillForces()
 {
