@@ -11,6 +11,8 @@
 
 using namespace boost::asio::ip;
 
+using ull = unsigned long long;
+
 class Server {
 
 public:
