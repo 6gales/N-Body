@@ -7,7 +7,7 @@ class ompComputer : public Computer
 {
 private:
 	Vector3D** forces;
-
+	Task* t;
 	void fillForces();
 
 public:
@@ -16,7 +16,5 @@ public:
 		omp_set_num_threads(numThreads);
 		forces = nullptr;
 	}
-	void init(std::vector<Particle> &, ull);
-	const std::vector<Particle> &iterate();
-	~ompComputer();
+	std::vector<Particle> iterate(int key);
 };

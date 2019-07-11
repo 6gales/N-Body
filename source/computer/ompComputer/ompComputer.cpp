@@ -3,9 +3,9 @@
 void ompComputer::fillForces()
 {
 	#pragma omp parallel for schedule(dynamic)
-	for(ull i = 0; i < N; ++i)
+	for(ull i = 0; i < t->N; ++i)
 	{
-		for(ull j = i; j < N; ++j)
+		for(ull j = i; j < t->N; ++j)
 		{
 			if(i == j)
 			{
@@ -13,63 +13,58 @@ void ompComputer::fillForces()
 				continue;
 			}
 
-			Vector3D delta = (particleVectors[previous][i].coords - particleVectors[previous][j].coords);
+			Vector3D delta = (t->particleVectors[t->previous][i].coords - t->particleVectors[t->previous][j].coords);
 			double mod = delta.module();
 
-			forces[i][j] = gravity * particleVectors[previous][i].mass * particleVectors[previous][j].mass
+			forces[i][j] = gravity * t->particleVectors[t->previous][i].mass * t->particleVectors[t->previous][j].mass
 						   / (mod * mod * mod + 1.0e-8) * delta;
 			forces[j][i] = (-1) * forces[i][j];
 		}
 	}
 }
 
-void ompComputer::init(std::vector<Particle> &particles, ull _N)
+std::vector<Particle> ompComputer::iterate(int key)
 {
-	particleVectors[previous] = particles;
-	particleVectors[current] = particles;
-	N = _N;
-	forces = new Vector3D*[N];
 
-	#pragma omp parallel for
+	//как оно будет работать с очередью?
+	containersm.lock();
+
+	t = &tasks.find(key)->second;
+
+	ull N = t->N;
+
+	forces = new Vector3D*[N];
 	for(ull i = 0; i < N; ++i)
 	{
 		forces[i] = new Vector3D[N];
 	}
-}
 
-
-
-const std::vector<Particle> &ompComputer::iterate()
-{
 	fillForces();
 
 	#pragma omp parallel for
-	for(ull i = 0; i < N; ++i)
+	for(ull i = 0; i < t->N; ++i)
 	{
 		Vector3D F;
-		for(ull j = 0; j < N; ++j)
+		for(ull j = 0; j < t->N; ++j)
 		{
 			F -= forces[i][j];
 		}
-		Vector3D acc = F * (1.0 / particleVectors[previous][i].mass);
-		particleVectors[current][i].vel = particleVectors[previous][i].vel + acc * dt;
-		particleVectors[current][i].coords = particleVectors[previous][i].coords
-											 + particleVectors[previous][i].vel * dt;
+		Vector3D acc = F * (1.0 / t->particleVectors[t->previous][i].mass);
+		t->particleVectors[t->current][i].vel = t->particleVectors[t->previous][i].vel + acc * dt;
+		t->particleVectors[t->current][i].coords = t->particleVectors[t->previous][i].coords
+											 + t->particleVectors[t->previous][i].vel * dt;
 	}
 
-	previous ^= 1;
-	current ^= 1;
+	t->next();
 
-	return particleVectors[previous];
-}
-
-
-ompComputer::~ompComputer()
-{
-	#pragma omp parallel for
 	for(ull i = 0; i < N; ++i)
 	{
 		delete[] forces[i];
 	}
 	delete[] forces;
+
+	std::vector<Particle> result = t->particleVectors[t->previous];
+	containersm.unlock();
+
+	return result;
 }
