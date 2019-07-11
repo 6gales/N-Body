@@ -42,6 +42,7 @@ SOURCES += main.cpp\
 HEADERS  += \
     ../client/IOException.hpp \
     ../client/client.hpp \
+    ../client/clientParser.hpp \
     Particle.h \
     Vector3D.h \
     abstractComputer.h \

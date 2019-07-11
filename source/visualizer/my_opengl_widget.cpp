@@ -263,7 +263,10 @@ void MyOpenGLWidget::onTimer() {
     vertex_buffer.bind();
     vertex_buffer.write(0,vertices, static_cast<int>(numOfVectors*sizeof(QVector3D)));
     vao.release();
-    update();
+    if (shift == numOfVectors) {
+        shift = 0;
+        update();
+    }
 }
 MyOpenGLWidget::~MyOpenGLWidget(){
     delete client;
@@ -273,8 +276,9 @@ QVector3D MyOpenGLWidget::fromParticle(const Particle &part){
     return QVector3D(part.getX()/1.0e+9,part.getY()/1.0e+9,part.getZ()/1.0e+9);
 }
 void MyOpenGLWidget::fromParticleM(std::vector<Particle> &parts){
-    for(unsigned long long i = 0; i<numOfVectors; i++) {
-        vertices[i]=fromParticle(parts[i]);
+    for(unsigned long long i = 0; i<parts.size(); i++) {
+        vertices[i+shift]=fromParticle(parts[i]);
 //        std::cerr << vertices[i].x() << " " << vertices[i].y() << " " << vertices[i].z() << " " << std::endl;
     }
+    shift += parts.size();
 }

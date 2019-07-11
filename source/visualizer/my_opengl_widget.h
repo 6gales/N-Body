@@ -58,6 +58,7 @@ private:
 
     int scoord[2],lcoord[2];
     int large;
+    unsigned long long shift = 0;
 
     float xrotation_angle {0.0f};
     float yrotation_angle {0.0f};
