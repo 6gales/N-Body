@@ -57,12 +57,9 @@ void SequentialRKComputer::fillForces(std::vector<Vector3D> coords)
 
 std::vector<Particle> SequentialRKComputer::iterate(int key)
 {
-
-	//как оно будет работать с очередью?
 	containersm.lock();
 
 	t = &tasks.find(key)->second;
-//	orders;
 
 	ull N = t->N;
 

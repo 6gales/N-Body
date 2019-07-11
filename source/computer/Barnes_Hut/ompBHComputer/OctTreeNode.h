@@ -12,7 +12,7 @@ private:
 	Domain3D domain;
 
 	bool isEmpty;
-
+	const double gravity = 6.67e-11;
 	std::unique_ptr<OctTreeNode> children[NUM_OF_CHILDREN];
 
 	Particle* part;

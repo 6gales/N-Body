@@ -93,7 +93,7 @@ Vector3D OctTreeNode::computeForce(Particle* part1, const Particle* part2) const
 {
 	Vector3D delta = part2->coords - part1->coords;
 	double module  = delta.module();
-	return (6.67 * 1.0e-11 * part1->mass * part2->mass / module / module / module) * delta;
+	return (gravity * part1->mass * part2->mass / (module * module * module + 1.0e-8)) * delta;
 }
 
 
