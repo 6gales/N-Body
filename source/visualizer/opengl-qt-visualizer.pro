@@ -29,37 +29,43 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp\
-    ../client/client.cpp \
-    ../client/clientParser.cpp \
     Particle.cpp \
     Vector3D.cpp \
     computer.cpp \
     main_window.cpp \
+    map_dialog.cpp \
+    mapopenglwidget.cpp \
     my_opengl_widget.cpp \
-    particlesdeque.cpp \
+    res.cpp \
     sequentialComputer.cpp
 
 HEADERS  += \
-    ../client/IOException.hpp \
-    ../client/client.hpp \
-    ../client/clientParser.hpp \
     Particle.h \
     Vector3D.h \
     abstractComputer.h \
     computer.h \
     main_window.h \
+    map_dialog.h \
+    mapopenglwidget.h \
     my_opengl_widget.h \
-    particlesdeque.h \
+    res.h \
     sequentialComputer.h \
 
 
 FORMS    += \
-    main_window.ui
+    main_window.ui \
+    map_dialog.ui
 
 DISTFILES += \
     in.txt \
+    shaders/axis.frag \
+    shaders/axis.vert \
     shaders/basic.vert \
-    shaders/basic.frag
+    shaders/basic.frag \
+    shaders/map.frag \
+    shaders/map.vert \
+    shaders/planet.frag \
+    shaders/planet.vert
 
 COPIES += shaders
 
@@ -71,5 +77,5 @@ shaders.path = $$OUT_PWD/shaders
 #else:unix: LIBS += -L$$PWD/../../../../local/lib/ -llibboost_system-vc142-mt-x64-1_70
 
 #INCLUDEPATH += C:\local\include
-#LIBS += -L"C:\local\lib" -lws2_32
+#LIBS += -L"C:\local\lib" -l boost_system.lib
 #DEPENDPATH += $$PWD/../../../../local/include

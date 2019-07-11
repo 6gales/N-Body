@@ -1,4 +1,3 @@
-#include "../../../N-Body/source/client/client.hpp"
 #include "my_opengl_widget.h"
 
 #include <QOpenGLContext>
@@ -7,9 +6,10 @@
 
 MyOpenGLWidget::MyOpenGLWidget(QWidget *parent) :
     QOpenGLWidget(parent),
+
     vertex_buffer(QOpenGLBuffer::VertexBuffer),
-    color_buffer(QOpenGLBuffer::VertexBuffer),
     index_buffer(QOpenGLBuffer::IndexBuffer),
+    mass_buffer(QOpenGLBuffer::VertexBuffer),
     linev_buffer(QOpenGLBuffer::VertexBuffer),
     linec_buffer(QOpenGLBuffer::VertexBuffer),
     linex_buffer(QOpenGLBuffer::IndexBuffer)
@@ -20,65 +20,46 @@ MyOpenGLWidget::MyOpenGLWidget(QWidget *parent) :
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setSamples(4);
     setFormat(format);
-
     connect(&timer, &QTimer::timeout, this, &MyOpenGLWidget::onTimer);
-    timer.start(1);
-}
-
-void MyOpenGLWidget::set_client(std::string host, unsigned short port, std::ifstream &data_file) {
-    client = new Client{host, port, data_file};
+    timer.start(1000);
 }
 
 void MyOpenGLWidget::initializeGL() {
     auto *gl = context()->functions();
 
-    gl->glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
+    gl->glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     gl->glEnable(GL_DEPTH_TEST);
     gl->glEnable(GL_MULTISAMPLE);
+
 
     initView();
     initProgram();
 }
-QVector3D colorFromMass(double mass){ //prototype realization
-    if(mass<1e+15)
-        return QVector3D(1.0f,1.0f,1.0f);
-    if(mass<1e+32)
-        return QVector3D(1.0f,0.5f,0.0f);
-    if(mass<4e+40)
-        return QVector3D(1.0f,0.0f,0.0f);
-    if(mass<1e+70)
-        return QVector3D(0.5f,0.0f,0.5f);
-    if(mass<1e+90)
-        return QVector3D(0.0f,0.0f,1.0f);
-    return QVector3D(1.0f,1.0f,1.0f);
-}
 void MyOpenGLWidget::initProgram() {
-//    std::ifstream in("C://ssd.sccc//N-Body//source//visualizer//in.txt");
-    numOfVectors = client->get_count();
-//    computer = getInstanceOf();
+    std::ifstream in("C://ssd.sccc//N-Body//source//visualizer//in.txt");
+    in>>numOfVectors;
+    computer = getInstanceOf();
 
-    vertices = new QVector3D[numOfVectors] () ;
-    QVector3D *colors = new QVector3D[numOfVectors];
-    unsigned long long *points = new unsigned long long[numOfVectors];
-    std::vector<float> particles_mass = client->get_particles_mass();
-//    std::vector<Particle> parts{numOfVectors};
+    vertices.resize(numOfVectors);
+    std::vector<float> masses(numOfVectors);
+    std::vector<unsigned int> points(numOfVectors);
+    std::shared_ptr<Particle> parts(new Particle[numOfVectors]);
 
-    for(unsigned long long i = 0; i <numOfVectors; ++i) {
-//            double mass, x, y, z, vx, vy, vz;
-//            in >> mass >> x >> y >> z >> vx >> vy >> vz;
-//            std::cerr << particles_mass[i] << std::endl;
-//            parts[i] = Particle(mass, x, y, z, vx, vy, vz);
-            colors[i]=colorFromMass(particles_mass[i]);
+    for(unsigned int i = 0; i <numOfVectors; ++i){
+            double mass, x, y, z, vx, vy, vz;
+            in >> mass >> x >> y >> z >> vx >> vy >> vz;
+            parts.get()[i] = Particle(mass, x, y, z, vx, vy, vz);
+            masses[i]=static_cast<float>(mass);
             points[i]=i;
-//            std::cout << parts[i] << std::endl;
     }
-//    in.close();
-//    computer->init(parts, numOfVectors);
-    program = std::make_shared<QOpenGLShaderProgram>();
-    program->addShaderFromSourceFile(QOpenGLShader::Vertex, "shaders/basic.vert");
-    program->addShaderFromSourceFile(QOpenGLShader::Fragment, "shaders/basic.frag");
-    program->link();
-    program->bind();
+    in.close();
+    computer->init(parts, numOfVectors);
+
+    initShaderProgram(&planet, "shaders/planet.frag", "shaders/planet.vert");
+    initShaderProgram(&star, "shaders/basic.frag", "shaders/basic.vert");
+
+    star->bind();
+    planet->bind();
 
     vao.create();
     vao.bind();
@@ -87,29 +68,41 @@ void MyOpenGLWidget::initProgram() {
     vertex_buffer.create();
     vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
     vertex_buffer.bind();
-    vertex_buffer.allocate(vertices, static_cast<int>((numOfVectors*sizeof(QVector3D))));
+    vertex_buffer.allocate(vertices.data(), static_cast<int>((numOfVectors*sizeof(QVector3D))));
 
-    const auto v_loc = program->attributeLocation("vertex");
-    program->enableAttributeArray(v_loc);
-    program->setAttributeBuffer(v_loc, GL_FLOAT, 0, 3);
+    const auto v_loc = star->attributeLocation("vertex");
+    star->enableAttributeArray(v_loc);
+    star->setAttributeBuffer(v_loc, GL_FLOAT, 0, 3);
+    const auto vp_loc = planet->attributeLocation("vertex");
+    planet->enableAttributeArray(vp_loc);
+    planet->setAttributeBuffer(vp_loc, GL_FLOAT, 0, 3);
 
-    // Load vertex colors.
-    color_buffer.create();
-    color_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    color_buffer.bind();
-    color_buffer.allocate(colors, static_cast<int>(numOfVectors*sizeof(QVector3D)));
+    mass_buffer.create();
+    mass_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    mass_buffer.bind();
+    mass_buffer.allocate(masses.data(), static_cast<int>(numOfVectors*sizeof(float)));
 
-    const auto c_loc = program->attributeLocation("color");
-    program->enableAttributeArray(c_loc);
-    program->setAttributeBuffer(c_loc, GL_FLOAT, 0, 3);
 
+    const auto m_loc = star->attributeLocation("mass");
+    star->enableAttributeArray(m_loc);
+    star->setAttributeBuffer(m_loc, GL_FLOAT, 0,1);
+    const auto mp_loc = planet->attributeLocation("mass");
+    planet->enableAttributeArray(mp_loc);
+    planet->setAttributeBuffer(mp_loc, GL_FLOAT, 0,1);
     // Load points.
     index_buffer.create();
     index_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     index_buffer.bind();
-    index_buffer.allocate(points, static_cast<int>(numOfVectors*sizeof(points)));
+    index_buffer.allocate(points.data(), static_cast<int>(numOfVectors*sizeof(points)));
+
+    setPalette(makeStarPalette());
 
     vao.release();
+    star->release();
+
+    initShaderProgram(&axisP, "shaders/axis.frag", "shaders/axis.vert");
+
+    axisP->bind();
 
     lao.create();
     lao.bind();
@@ -119,27 +112,20 @@ void MyOpenGLWidget::initProgram() {
     linev_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     linev_buffer.bind();
     linev_buffer.allocate(xyz.data(), static_cast<int>((4*sizeof(QVector3D))));
-    program->enableAttributeArray(v_loc);
-    program->setAttributeBuffer(v_loc, GL_FLOAT, 0, 3);
 
-    linec_buffer.create();
-    linec_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    linec_buffer.bind();
-    linec_buffer.allocate(xyz.data(), static_cast<int>((4*sizeof(QVector3D))));
-    program->enableAttributeArray(c_loc);
-    program->setAttributeBuffer(c_loc, GL_FLOAT, 0, 3);
+    const auto va_loc = axisP->attributeLocation("vertex");
+    axisP->enableAttributeArray(va_loc);
+    axisP->setAttributeBuffer(va_loc, GL_FLOAT, 0, 3);
 
     std::vector<int> lin = {0,1,0,2,0,3};
-
     linex_buffer.create();
     linex_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     linex_buffer.bind();
     linex_buffer.allocate(lin.data(), static_cast<int>((3*sizeof(QVector3D))));
 
     lao.release();
-    program->release();
-    delete[] points;
-    delete[] colors;
+    axisP->release();
+    setShaderProgram(1);
 }
 
 void MyOpenGLWidget::resizeGL(int width, int height) {
@@ -149,14 +135,36 @@ void MyOpenGLWidget::resizeGL(int width, int height) {
 
     initView();
 }
-
+void MyOpenGLWidget::setPalette(std::vector<QVector3D> palette){
+    color_texture.destroy();
+    color_texture.setSize(static_cast<int>(palette.size()));
+    color_texture.setMinMagFilters(QOpenGLTexture::Linear,  QOpenGLTexture::Linear);
+    color_texture.setWrapMode(QOpenGLTexture::ClampToEdge);
+    color_texture.setFormat(QOpenGLTexture::RGB8_UNorm);
+    color_texture.allocateStorage();
+    color_texture.setData(QOpenGLTexture::RGB, QOpenGLTexture::Float32, palette.data());
+}
+void MyOpenGLWidget::initShaderProgram(std::shared_ptr<QOpenGLShaderProgram> *shpr, const QString &frag, const QString &vert){
+    (*shpr) = std::make_shared<QOpenGLShaderProgram>();
+    (*shpr)->addShaderFromSourceFile(QOpenGLShader::Fragment, frag);
+    (*shpr)->addShaderFromSourceFile(QOpenGLShader::Vertex, vert);
+    (*shpr)->link();
+}
+void MyOpenGLWidget::setShaderProgram(bool palette){
+    if(palette){
+        program=star;
+    }
+    else if(!palette){
+        program=planet;
+    }
+}
 void MyOpenGLWidget::initView() {
     model_matrix.setToIdentity();
     projection_matrix.setToIdentity();
     const auto angle = 45.0f;
     const auto aspect = float(width())/height();
     const auto near_plane = 0.01f;
-    const auto far_plane = 10000.0f;
+    const auto far_plane = 1e20f;
     projection_matrix.perspective(angle, aspect, near_plane, far_plane);
 }
 
@@ -165,11 +173,12 @@ void MyOpenGLWidget::paintGL() {
 
     gl->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (!program) {
+    if (!program||!axisP) {
         return;
     }
 
-    program->bind();
+
+    axisP->bind();
 
     view_matrix.setToIdentity();
     const auto center = QVector3D(0.0f, 0.0f, 0.0f);
@@ -181,10 +190,9 @@ void MyOpenGLWidget::paintGL() {
     rotate.rotate(yrotation_angle, QVector3D(0.0f, 1.0f, 0.0f));
     rotate.rotate(zrotation_angle, QVector3D(0.0f, 0.0f, 1.0f));
 
-    const auto mvp_loc = program->uniformLocation("MVP");
-    program->setUniformValue(mvp_loc, projection_matrix*view_matrix*rotate*model_matrix);
-    const auto eye_loc = program->uniformLocation("eye");
-    program->setUniformValue(eye_loc, eye);
+    const auto mvp_loc = axisP->uniformLocation("MVP");
+    axisP->setUniformValue(mvp_loc, projection_matrix*view_matrix*rotate*model_matrix);
+
 
     lao.bind();
     gl->glEnable(GL_LINE_SMOOTH);
@@ -192,9 +200,19 @@ void MyOpenGLWidget::paintGL() {
     gl->glDrawElements(GL_LINES, static_cast<int>(6), GL_UNSIGNED_INT, nullptr);
     lao.release();
 
+    axisP->release();
+
+    program->bind();
+    const auto mvpp_loc = program->uniformLocation("MVP");
+    program->setUniformValue(mvpp_loc, projection_matrix*view_matrix*rotate*model_matrix);
     vao.bind();
+    const int pal_loc = program->uniformLocation("colorD");
+    gl->glActiveTexture(GL_TEXTURE0);
+    program->setUniformValue(pal_loc, 0);
+    color_texture.bind();
     gl->glEnable(GL_PROGRAM_POINT_SIZE);
     gl->glDrawElements(GL_POINTS, static_cast<int>(numOfVectors), GL_UNSIGNED_INT, nullptr);
+    color_texture.release();
     vao.release();
 
     program->release();
@@ -226,9 +244,9 @@ void MyOpenGLWidget::mouseMoveEvent(QMouseEvent *me){
 }
 void MyOpenGLWidget::wheelEvent(QWheelEvent *qe){
     if(qe->angleDelta().ry()>0)
-        eye+=QVector3D(20.0f,0.0f,0.0f);
+        scale+=1;
     else
-        eye-=QVector3D(20.0f,0.0f,0.0f);
+        scale-=1;
     update();
 
 }
@@ -253,32 +271,18 @@ void MyOpenGLWidget::keyPressEvent(QKeyEvent *ke){
     }
 }
 void MyOpenGLWidget::onTimer() {
-    if (!client) return;
-    auto particles = client->get_front();
-    client->pop_front();
-    if (particles.empty()) return;
-//    std::cerr << particles.size() << std::endl;
-    fromParticleM(particles);
+    fromParticleM(computer->iterate());
     vao.bind();
     vertex_buffer.bind();
-    vertex_buffer.write(0,vertices, static_cast<int>(numOfVectors*sizeof(QVector3D)));
+    vertex_buffer.write(NULL,vertices.data(), static_cast<int>(numOfVectors*sizeof(QVector3D)));
     vao.release();
-    if (shift == numOfVectors) {
-        shift = 0;
-        update();
-    }
-}
-MyOpenGLWidget::~MyOpenGLWidget(){
-    delete client;
-    delete[] vertices;
+    update();
 }
 QVector3D MyOpenGLWidget::fromParticle(const Particle &part){
-    return QVector3D(part.getX()/1.0e+9,part.getY()/1.0e+9,part.getZ()/1.0e+9);
+    return QVector3D(part.getX()/pow(10,scale),part.getY()/pow(10,scale),part.getZ()/pow(10,scale));
 }
-void MyOpenGLWidget::fromParticleM(std::vector<Particle> &parts){
-    for(unsigned long long i = 0; i<parts.size(); i++) {
-        vertices[i+shift]=fromParticle(parts[i]);
-//        std::cerr << vertices[i].x() << " " << vertices[i].y() << " " << vertices[i].z() << " " << std::endl;
-    }
-    shift += parts.size();
+void MyOpenGLWidget::fromParticleM(const Particle *part){
+    for(unsigned int i = 0; i<numOfVectors; i++)
+        vertices[i]=fromParticle(part[i]);
+
 }

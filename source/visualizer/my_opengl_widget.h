@@ -1,10 +1,12 @@
 #pragma once
-#include "../../../N-Body/source/client/client.hpp"
+
 #include <QOpenGLWidget>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
+#include <QOpenGLTexture>
 #include <QMatrix4x4>
 #include <QTimer>
+#include <QImage>
 #include <memory>
 #include <QMouseEvent>
 #include <QWheelEvent>
@@ -14,6 +16,7 @@
 #include <fstream>
 #include <ctime>
 #include "computer.h"
+#include "res.h"
 
 class QOpenGLShaderProgram;
 
@@ -22,8 +25,8 @@ class MyOpenGLWidget : public QOpenGLWidget {
 
 public:
     explicit MyOpenGLWidget(QWidget *parent=nullptr);
-    ~MyOpenGLWidget() override;
-    void set_client(std::string host, unsigned short port, std::ifstream &data_file);
+    void setPalette(std::vector<QVector3D> palette);
+    void setShaderProgram(bool palette);
 
 protected:
     virtual void initializeGL() override;
@@ -34,36 +37,36 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *me) override;
     virtual void wheelEvent(QWheelEvent *qe) override;
     virtual void keyPressEvent(QKeyEvent *ke) override;
-
+signals:
+    void initialized();
 private:
     void initProgram();
     void initView();
     QVector3D fromParticle(const Particle &part);
-    void fromParticleM(std::vector<Particle> &parts);
+    void fromParticleM(const Particle *part);
     void onTimer();
-
+    void initShaderProgram(std::shared_ptr<QOpenGLShaderProgram> *shpr, const QString &frag, const QString &vert);
 private:
-    std::shared_ptr<QOpenGLShaderProgram> program;
-
-    Client *client = nullptr;
+    std::shared_ptr<QOpenGLShaderProgram> star, planet, axisP, program;
 
     QOpenGLVertexArrayObject vao, lao;
-    QOpenGLBuffer vertex_buffer, color_buffer, index_buffer,linev_buffer, linec_buffer, linex_buffer;
+    QOpenGLBuffer vertex_buffer, /*color_buffer,*/ index_buffer,mass_buffer,linev_buffer, linec_buffer, linex_buffer;
     QVector3D eye=QVector3D(1.0f,0.0f,0.0f);
-    QVector3D * vertices,*speed;
+    std::vector<QVector3D>  vertices;
     QMatrix4x4 model_matrix, view_matrix, projection_matrix;
+    QOpenGLTexture color_texture {QOpenGLTexture::Target1D};
     Computer* computer;
 
     bool pressedButton =false;
 
     int scoord[2],lcoord[2];
     int large;
-    unsigned long long shift = 0;
+    int scale=10;
 
     float xrotation_angle {0.0f};
     float yrotation_angle {0.0f};
     float zrotation_angle {0.0f};
     QTimer timer;
-    unsigned long long numOfVectors;
+    unsigned int numOfVectors;
 };
 

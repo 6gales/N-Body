@@ -1,25 +1,29 @@
 #pragma once
 
-#include "../../../N-Body/source/client/client.hpp"
 #include <QMainWindow>
-#include <memory>
+#include <QDialog>
+#include <QOpenGLFunctions>
 
 namespace Ui {
 class MainWindow;
 }
+class MyOpenGLWidget;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void start_client(std::string host, unsigned short port, std::ifstream &data_file);
 
 private slots:
-    void on_actionAbout_triggered();
+    void initGlWidget();
 
+    void on_actionPlanetary_triggered();
+    void on_actionStellar_triggered();
+    void on_actionDensity_triggered();
 private:
-    std::shared_ptr<Client> client;
     Ui::MainWindow *ui;
+    MyOpenGLWidget *gl_widget;
 };
+

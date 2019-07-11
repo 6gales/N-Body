@@ -1,5 +1,6 @@
 #include "main_window.h"
 #include "ui_main_window.h"
+#include "map_dialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -9,18 +10,31 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //ui->statusBar->hide();
     //ui->mainToolBar->hide();
-}
 
-void MainWindow::start_client(std::string host, unsigned short port, std::ifstream &data_file) {
-    ui->openGLWidget->set_client(host, port, data_file);
+    gl_widget = ui->openGLWidget;
+
+    connect(gl_widget, &MyOpenGLWidget::initialized, this, &MainWindow::initGlWidget);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-
-void MainWindow::on_actionAbout_triggered()
-{
-
+void MainWindow::initGlWidget(){}
+void MainWindow::on_actionPlanetary_triggered(){
+    gl_widget->setPalette(makePlanetPalette());
+    gl_widget->setShaderProgram(0);
+    gl_widget->update();
+}
+void MainWindow::on_actionStellar_triggered(){
+    gl_widget->setPalette(makeStarPalette());
+    gl_widget->setShaderProgram(1);
+    gl_widget->update();
+}
+void MainWindow::on_actionDensity_triggered(){
+    auto *dlg = new MapDialog () /*std::make_unique<MapDialog>(this)*/;
+    dlg->setModal(false);
+    dlg->show();
+    //dlg->exec();
+    //if (dlg.exec() == QDialog::Accepted) {}
 }
