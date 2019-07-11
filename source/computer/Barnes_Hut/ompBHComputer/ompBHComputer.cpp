@@ -12,19 +12,21 @@ std::vector<Particle> OMPBHComputer::iterate(int key)
 	Acces = new Vector3D[N];
 
 	OctTree tree(t->particleVectors[t->previous], Domain3D(-10.0, 10.0, -10.0, 10.0, -10.0, 10.0));
+
+	#pragma omp parallel for
 	for(int i = 0; i < N; ++i)
 	{
 		Vector3D force = tree.computeForce(&(t->particleVectors[t->previous][i]), theta);
 		Acces[i] = tree.computeForce(&(t->particleVectors[t->previous][i]), theta) * (1.0 / t->particleVectors[t->previous][i].mass);
 	}
 
-
+	#pragma omp parallel for
 	for(int i = 0; i < N; ++i)
+	{
 		t->particleVectors[t->current][i].vel = t->particleVectors[t->previous][i].vel + Acces[i] * dt;
-
-
-	for(int i = 0; i < N; ++i)
-		t->particleVectors[t->current][i].coords =  t->particleVectors[t->previous][i].coords + t->particleVectors[t->current][i].vel * dt;
+		t->particleVectors[t->current][i].coords =
+				t->particleVectors[t->previous][i].coords + t->particleVectors[t->current][i].vel * dt;
+	}
 
 	t->next();
 

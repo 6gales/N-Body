@@ -2,6 +2,7 @@
 #include "OctTree.h"
 #include "../../abstractComputer.h"
 #include <memory>
+#include <omp.h>
 
 
 class OMPBHComputer : public Computer
@@ -12,6 +13,9 @@ private:
 	Task *t;
 
 public:
-	OMPBHComputer(ComputerType type) : Computer(type, 1) {}
+	OMPBHComputer(ComputerType type, size_t threadsNum) : Computer(type, threadsNum)
+	{
+		omp_set_num_threads(threadsNum);
+	}
 	std::vector<Particle> iterate(int);
 };

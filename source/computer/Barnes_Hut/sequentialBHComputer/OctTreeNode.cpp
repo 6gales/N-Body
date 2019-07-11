@@ -7,7 +7,6 @@ void OctTreeNode::insertPart(Particle *_part)
 {
 	if(isEmpty)
 	{
-		std::cout << _part->coords << std::endl;
 		isEmpty = false;
 		part = _part;
 	}

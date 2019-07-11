@@ -25,8 +25,6 @@ void OMPComputer::fillForces()
 
 std::vector<Particle> OMPComputer::iterate(int key)
 {
-
-	//как оно будет работать с очередью?
 	containersm.lock();
 
 	t = &tasks.find(key)->second;
