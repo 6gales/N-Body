@@ -1,8 +1,8 @@
-#include "ompKComputer.h"
+#include "ompRKComputer.h"
 
-void ompRKComputer::fillForces()
+void OMPRKComputer::fillForces()
 {
-#pragma omp parallel for schedule(dynamic)
+	#pragma omp parallel for schedule(dynamic)
 	for(ull i = 0; i < t->N; ++i)
 	{
 		for(ull j = i; j < t->N; ++j)
@@ -23,9 +23,9 @@ void ompRKComputer::fillForces()
 	}
 }
 
-void ompRKComputer::fillForces(std::vector<Vector3D> coords)
+void OMPRKComputer::fillForces(std::vector<Vector3D> coords)
 {
-#pragma omp parallel for schedule(dynamic)
+	#pragma omp parallel for schedule(dynamic)
 	for(ull i = 0; i < t->N; ++i)
 	{
 		for (ull j = i; j < t->N; ++j)
@@ -48,7 +48,6 @@ void ompRKComputer::fillForces(std::vector<Vector3D> coords)
 
 std::vector<Particle> ompRKComputer::iterate(int key)
 {
-	//как оно будет работать с очередью?
 	containersm.lock();
 
 	t = &tasks.find(key)->second;
@@ -76,7 +75,7 @@ std::vector<Particle> ompRKComputer::iterate(int key)
 			fillForces(xBuffer);
 		}
 
-	#pragma omp parallel for schedule(dynamic)
+		#pragma omp parallel for schedule(dynamic)
 		for(ull i = 0; i < N; ++i)
 		{
 			accCoef[k][i] = getAcc(i);
@@ -116,11 +115,11 @@ std::vector<Particle> ompRKComputer::iterate(int key)
 	return result;
 }
 
-Vector3D ompRKComputer::getAcc(ull i)
+Vector3D OMPRKComputer::getAcc(ull i)
 {
 	Vector3D F;
 
-#pragma omp parallel for schedule(dynamic) reduction(-:F)
+	#pragma omp parallel for schedule(dynamic) reduction(-:F)
 	for(ull j = 0; j < t->N; ++j)
 	{
 		F -= forces[i][j];
