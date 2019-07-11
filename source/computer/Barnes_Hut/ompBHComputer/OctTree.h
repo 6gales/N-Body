@@ -1,10 +1,8 @@
 #pragma once
 
-#include "../Particle/Particle.h"
 #include "OctTreeNode.h"
 #include <vector>
 #include <bits/shared_ptr.h>
-#include "../abstractComputer.h"
 
 class OctTree
 {

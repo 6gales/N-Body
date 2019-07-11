@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../abstractComputer.h"
+#include "../../abstractComputer.h"
 #include "omp.h"
 
 class OMPRKComputer : public Computer
@@ -19,5 +19,4 @@ public:
 		forces = nullptr;
 	}
 	std::vector<Particle> iterate(int key);
-
 };

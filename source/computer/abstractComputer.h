@@ -65,7 +65,7 @@ public:
 	{
 		containersm.lock();
 		weight += N;
-		tasks.emplace(key, N, particles);
+		tasks.emplace(key, Task{N, particles} );
 		containersm.unlock();
 	}
 

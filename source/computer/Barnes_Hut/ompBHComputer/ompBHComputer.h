@@ -1,18 +1,17 @@
 #pragma once
 #include "OctTree.h"
-#include "../abstractComputer.h"
+#include "../../abstractComputer.h"
 #include <memory>
 
 
-class SequentialBHComputer : public Computer
+class OMPBHComputer : public Computer
 {
 private:
 	const double theta = 0.1;
-
 	Vector3D* Acces = nullptr;
 	Task *t;
 
 public:
-	SequentialBHComputer(ComputerType type) : Computer(type, 1) {}
+	OMPBHComputer(ComputerType type) : Computer(type, 1) {}
 	std::vector<Particle> iterate(int);
 };
