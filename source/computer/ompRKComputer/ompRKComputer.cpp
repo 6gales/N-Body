@@ -54,6 +54,13 @@ std::vector<Particle> ompRKComputer::iterate(int key)
 	t = &tasks.find(key)->second;
 
 	ull N = t->N;
+
+	forces = new Vector3D*[N];
+	for(ull i = 0; i < N; ++i)
+	{
+		forces[i] = new Vector3D[N];
+	}
+
 	std::vector<Vector3D> xBuffer(N);
 	std::vector<std::vector<Vector3D>> accCoef(4, std::vector<Vector3D>(N));
 	std::vector<std::vector<Vector3D>> velCoef(3, std::vector<Vector3D>(N));
@@ -95,8 +102,13 @@ std::vector<Particle> ompRKComputer::iterate(int key)
 				(t->particleVectors[t->previous][i].vel + 2.0 * velCoef[0][i] + 2.0 * velCoef[1][i] + velCoef[2][i]);
 	}
 
-	t->previous ^= 1;
-	t->current ^= 1;
+	t->next();
+
+	for(ull i = 0; i < N; ++i)
+	{
+		delete[] forces[i];
+	}
+	delete[] forces;
 
 	std::vector<Particle> result = t->particleVectors[t->previous];
 	containersm.unlock();

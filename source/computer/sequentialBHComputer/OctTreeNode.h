@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <memory>
-#include "Particle.h"
+#include "../Particle/Particle.h"
 #include "Domain3D.h"
 
 #define NUM_OF_CHILDREN 8

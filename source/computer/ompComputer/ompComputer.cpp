@@ -23,7 +23,7 @@ void ompComputer::fillForces()
 	}
 }
 
-const std::vector<Particle> &ompComputer::iterate(int key)
+std::vector<Particle> ompComputer::iterate(int key)
 {
 
 	//как оно будет работать с очередью?
@@ -32,6 +32,12 @@ const std::vector<Particle> &ompComputer::iterate(int key)
 	t = &tasks.find(key)->second;
 
 	ull N = t->N;
+
+	forces = new Vector3D*[N];
+	for(ull i = 0; i < N; ++i)
+	{
+		forces[i] = new Vector3D[N];
+	}
 
 	fillForces();
 
@@ -49,8 +55,13 @@ const std::vector<Particle> &ompComputer::iterate(int key)
 											 + t->particleVectors[t->previous][i].vel * dt;
 	}
 
-	t->previous ^= 1;
-	t->current ^= 1;
+	t->next();
+
+	for(ull i = 0; i < N; ++i)
+	{
+		delete[] forces[i];
+	}
+	delete[] forces;
 
 	std::vector<Particle> result = t->particleVectors[t->previous];
 	containersm.unlock();
