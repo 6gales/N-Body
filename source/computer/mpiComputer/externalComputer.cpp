@@ -1,4 +1,3 @@
-#include <vector>
 #include <map>
 #include <deque>
 #include <cmath>
@@ -6,11 +5,12 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
-#include "../Particle/Particle.h"
-#include "../Vector3D/Vector3D.h"
+#include <utility>
 #include "mpi.h"
 #include "boost/asio.hpp"
 #include "boost/bind.hpp"
+#include "../Particle/Particle.h"
+#include "../Vector3D/Vector3D.h"
 
 using namespace boost::asio::ip;
 using namespace boost;
@@ -133,7 +133,7 @@ public:
 	void initRead()
 	{
 		read_msg = new char[4];
-		asio::read(sock, asio::buffer(read_msg, 4),
+		asio::async_read(sock, asio::buffer(read_msg, 4),
 				   bind(&SocketReader::handleMessageSize, this,
 						asio::placeholders::error));
 	}
@@ -148,7 +148,7 @@ public:
 
 			if (size == 5) //case iterate
 			{
-				boost::asio::read(sock, boost::asio::buffer(read_msg, 5),
+				boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
 								  bind(&SocketReader::handleIterateKey, this,
 									   asio::placeholders::error));
 			}
@@ -156,7 +156,7 @@ public:
 			{
 				delete[] read_msg;
 				read_msg = new char[size];
-				asio::read(sock, boost::asio::buffer(read_msg, 4),
+				asio::async_read(sock, boost::asio::buffer(read_msg, 4),
 						   bind(&SocketReader::handleNewTask, this,
 								asio::placeholders::error));
 			}
@@ -206,7 +206,7 @@ public:
 			delete[] read_msg;
 			size = count;
 			read_msg = new char[sizeof(int) + sizeof(float) * 7 * count];
-			asio::read(sock, asio::buffer(read_msg, sizeof(int) + sizeof(float) * 7 * count),
+			asio::async_read(sock, asio::buffer(read_msg, sizeof(int) + sizeof(float) * 7 * count),
 					   bind(&SocketReader::handleParticles, this,
 							asio::placeholders::error));
 		}
@@ -444,7 +444,7 @@ int main(int argc, char **argv)
 
 		ioService = new asio::io_service;
 		tcp::endpoint ep{ address::from_string(ip_address), port };
-		tcp::acceptor acceptor{ioService, ep};
+		tcp::acceptor acceptor{*ioService, ep};
 		sock = new tcp::socket(*ioService);
 		acceptor.accept(*sock);
 
@@ -513,13 +513,12 @@ int main(int argc, char **argv)
 
 	char notFinished = 1;
 
-	std::unique_lock<std::mutex> lk(mutex);
-
 	while (notFinished)
 	{
 		if (!localRank)
 		{
-			mutex.lock();
+			std::unique_lock<std::mutex> lk(mutex);
+//			mutex.lock();
 			while (orders.size() == 0)
 			{
 				cond.wait(lk);
@@ -529,7 +528,7 @@ int main(int argc, char **argv)
 
 
 
-			mutex.unlock();
+//			mutex.unlock();
 		}
 		//iterate(counts, shifts, particles, N);
 

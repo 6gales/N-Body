@@ -5,6 +5,7 @@
 #include <map>
 #include <deque>
 #include "Particle/Particle.h"
+#include "ComputerType.h"
 
 using ull = unsigned long long;
 
@@ -40,6 +41,8 @@ struct Task
 
 class Computer
 {
+	const ComputerType type;
+
 protected:
 	double gravity = 6.67408e-11;
 	double dt = 0.001;
@@ -50,6 +53,9 @@ protected:
 	ull weight = 0;
 
 public:
+	Computer(ComputerType _type) : type{ _type }
+	{}
+
 	void add(int key, std::vector<Particle> &particles, ull N)
 	{
 		containersm.lock();
