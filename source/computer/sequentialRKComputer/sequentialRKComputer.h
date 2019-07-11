@@ -5,14 +5,12 @@
 class SequentialRKComputer : public Computer
 {
 private:
-	Vector3D** forces;
+	Vector3D** forces = nullptr;
+	Task *t;
 	Vector3D getAcc(ull i);
 	void fillForces();
+	void fillForces(std::vector<Vector3D> coords);
 
 public:
-	void init(std::vector<Particle> &, ull);
-	const std::vector<Particle> &iterate();
-	~SequentialRKComputer();
-
-	void fillForces(std::vector<Vector3D> coords);
+	std::vector<Particle> iterate(int);
 };
