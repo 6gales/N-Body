@@ -16,7 +16,7 @@
 #include <fstream>
 #include <ctime>
 #include "computer.h"
-#include "palette.h"
+#include "res.h"
 
 class QOpenGLShaderProgram;
 
@@ -27,8 +27,6 @@ public:
     explicit MyOpenGLWidget(QWidget *parent=nullptr);
     void setPalette(std::vector<QVector3D> palette);
     void setShaderProgram(bool palette);
-
-    ~MyOpenGLWidget() override;
 
 protected:
     virtual void initializeGL() override;
@@ -54,7 +52,7 @@ private:
     QOpenGLVertexArrayObject vao, lao;
     QOpenGLBuffer vertex_buffer, /*color_buffer,*/ index_buffer,mass_buffer,linev_buffer, linec_buffer, linex_buffer;
     QVector3D eye=QVector3D(1.0f,0.0f,0.0f);
-    QVector3D * vertices,*speed;
+    std::vector<QVector3D>  vertices;
     QMatrix4x4 model_matrix, view_matrix, projection_matrix;
     QOpenGLTexture color_texture {QOpenGLTexture::Target1D};
     Computer* computer;
@@ -63,6 +61,7 @@ private:
 
     int scoord[2],lcoord[2];
     int large;
+    int scale=10;
 
     float xrotation_angle {0.0f};
     float yrotation_angle {0.0f};

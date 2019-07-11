@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QDialog>
 #include <QOpenGLFunctions>
 
 namespace Ui {
@@ -20,6 +21,7 @@ private slots:
 
     void on_actionPlanetary_triggered();
     void on_actionStellar_triggered();
+    void on_actionDensity_triggered();
 private:
     Ui::MainWindow *ui;
     MyOpenGLWidget *gl_widget;

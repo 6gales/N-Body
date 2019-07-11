@@ -33,8 +33,10 @@ SOURCES += main.cpp\
     Vector3D.cpp \
     computer.cpp \
     main_window.cpp \
+    map_dialog.cpp \
+    mapopenglwidget.cpp \
     my_opengl_widget.cpp \
-    palette.cpp \
+    res.cpp \
     sequentialComputer.cpp
 
 HEADERS  += \
@@ -43,13 +45,16 @@ HEADERS  += \
     abstractComputer.h \
     computer.h \
     main_window.h \
+    map_dialog.h \
+    mapopenglwidget.h \
     my_opengl_widget.h \
-    palette.h \
+    res.h \
     sequentialComputer.h \
 
 
 FORMS    += \
-    main_window.ui
+    main_window.ui \
+    map_dialog.ui
 
 DISTFILES += \
     in.txt \
@@ -57,6 +62,8 @@ DISTFILES += \
     shaders/axis.vert \
     shaders/basic.vert \
     shaders/basic.frag \
+    shaders/map.frag \
+    shaders/map.vert \
     shaders/planet.frag \
     shaders/planet.vert
 

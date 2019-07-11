@@ -40,16 +40,16 @@ void SequentialComputer::init(std::shared_ptr <Particle> _parts, size_t _N)
 Particle* SequentialComputer::iterate()
 {
 	fillForces();
-    for(size_t i = 0; i < N; ++i)
-    {
-        for(size_t j = 0; j < N; ++j)
-        {
-            std::cout << forces[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
+//    for(size_t i = 0; i < N; ++i)
+//    {
+//        for(size_t j = 0; j < N; ++j)
+//        {
+//            std::cout << forces[i][j] << " ";
+//        }
+//        std::cout << std::endl;
+//    }
 
-    std::cout << std::endl;
+//    std::cout << std::endl;
 
 	for(size_t i = 0; i < N; ++i)
 	{
@@ -60,8 +60,8 @@ Particle* SequentialComputer::iterate()
 		}
 		Vector3D acc = F * (1.0 / parts.get()[i].mass);
 		parts.get()[i].vel = parts.get()[i].vel + acc * dt;
-		parts.get()[i].coords = parts.get()[i].coords + parts.get()[i].vel * dt;
-        std::cout << parts.get()[i].vel << " " << parts.get()[i].coords << std::endl;
+        parts.get()[i].coords = parts.get()[i].coords + parts.get()[i].vel * dt;
+//        std::cout << parts.get()[i].vel << " " << parts.get()[i].coords << std::endl;
 	}
 	return parts.get();
 }

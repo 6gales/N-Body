@@ -11,6 +11,6 @@ out float massF;
 void main()
 {
     gl_Position = MVP * vec4(vertex, 1.0f);
-    gl_PointSize = 10;
+    gl_PointSize = 1;
     massF=mass;
 }
