@@ -25,14 +25,10 @@ void SequentialComputer::fillForces()
 	}
 }
 
-const std::vector<Particle> &SequentialComputer::iterate(int key)
+std::vector<Particle> SequentialComputer::iterate(int key)
 {
-	//как оно будет работать с очередью?
 	containersm.lock();
-
 	t = &tasks.find(key)->second;
-//	orders;
-	containersm.unlock();
 
 	ull N = t->N;
 	forces = new Vector3D*[N];
@@ -66,5 +62,8 @@ const std::vector<Particle> &SequentialComputer::iterate(int key)
 	}
 	delete[] forces;
 
-	return t->particleVectors[t->previous];
+	std::vector<Particle> copy = t->particleVectors[t->previous];
+	containersm.unlock();
+
+	return copy;
 }
