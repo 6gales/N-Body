@@ -12,6 +12,6 @@ private:
 	void fillForces(std::vector<Vector3D> coords);
 
 public:
-	SequentialRKComputer(ComputerType type) : Computer(type) {}
+	SequentialRKComputer(ComputerType type) : Computer(type, 1) {}
 	std::vector<Particle> iterate(int);
 };

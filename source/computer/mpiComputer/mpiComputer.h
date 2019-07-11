@@ -41,5 +41,5 @@ class mpiComputer : public Computer
 
 public:
 	mpiComputer(ComputerType type, size_t threads);
-	const std::vector<Particle> &iterate(int key);
+	std::vector<Particle> iterate(int key);
 };
