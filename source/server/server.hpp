@@ -31,6 +31,8 @@ public:
 
         inline tcp::socket& socket() { return sock; }
 
+        const std::shared_ptr<Computer> &get_computer() const;
+
         void start();
 
         inline unsigned int get_key() const { return key; }

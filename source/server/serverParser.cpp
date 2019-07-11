@@ -6,7 +6,6 @@ using ull = unsigned long long;
 std::string convert_particles_to_msg(std::vector<Particle> &data_particle, ull count) {
     std::string send_msg{};
     send_msg.append("DATA ", 5);
-//    TODO if need sending count, delete comments
     char counts[8];
     for (size_t j = 0; j < 8; ++j) {
         counts[j] = (char)(count >> ((7-j)*8));

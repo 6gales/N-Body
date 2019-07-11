@@ -59,11 +59,11 @@ void Server::Connection::handle_read_command(const boost::system::error_code &er
 
 void Server::Connection::handle_read_count(const boost::system::error_code &er) {
     if (!er) {
-        computer = server.create_computer(count);
         std::string str_msg{read_msg, 8};
         count = (((ull)str_msg.at(0) << 56) & 0xFF00000000000000) | (((ull)str_msg.at(1) << 48) & 0x00FF000000000000) | (((ull)str_msg.at(2) << 40) & 0x0000FF0000000000)
                               | (((ull)str_msg.at(3) << 32) & 0x000000FF00000000) | (((ull)str_msg.at(4) << 24) & 0x00000000FF000000) | (((ull)str_msg.at(5) << 16) & 0x0000000000FF0000)
                               | (((ull)str_msg.at(6) << 8) & 0x000000000000FF00) | ((ull)str_msg.at(7) & 0x00000000000000FF);
+        computer = server.create_computer(count);
         delete[] read_msg;
         read_msg = new char[sizeof(float)*7*count];
         boost::asio::async_read(sock, boost::asio::buffer(read_msg, sizeof(float)*7*count),
@@ -117,6 +117,10 @@ void Server::Connection::start() {
                                         boost::asio::placeholders::error));
 }
 
+const std::shared_ptr<Computer> &Server::Connection::get_computer() const {
+    return computer;
+}
+
 void Server::check(const boost::system::error_code &er) {
     if (!er) {
         conn_mutex.lock();
@@ -161,6 +165,7 @@ void Server::remove_connection(const std::shared_ptr<Server::Connection> &conn) 
         return;
     }
     unsigned int key = connections.find(conn)->get()->get_key();
+    connections.find(conn)->get()->get_computer()->remove(key);
     connections.erase(conn);
     conn_mutex.unlock();
     add_new_free_key(key);
@@ -176,31 +181,37 @@ std::shared_ptr<Computer> Server::create_computer(ull weight) {
 //                    comp_mutex.unlock();
 //                    return comp;
 //                } else {
+                    if (count_nodes < MAX_WEIGHT / weight + 1) continue;
                     comp = getInstanceOf(ComputerType::ompRKComputer, MAX_WEIGHT / weight + 1);
+                    count_nodes -= MAX_WEIGHT / weight + 1;
                     comp_mutex.unlock();
                     return comp;
 //                }
             } else if (!isExistSeqComp) {
+                if (count_nodes < 1) continue;
                 comp = getInstanceOf(ComputerType::sequentialBHComputer, 0);
+                count_nodes--;
                 isExistSeqComp = true;
                 comp_mutex.unlock();
                 return comp;
             } else {
+                if (count_nodes < 4) continue;
                 comp = getInstanceOf(ComputerType::ompRKComputer, 4);
+                count_nodes -= 4;
                 comp_mutex.unlock();
                 return comp;
             }
         } else {
             switch (comp->getType()) {
                 case sequentialBHComputer : {
-                    if (weight + comp->getWeight() < MAX_WEIGHT) {
+                    if (weight + comp->getWeight() <= MAX_WEIGHT) {
                         comp_mutex.unlock();
                         return comp;
                     }
                     break;
                 }
                 case ompRKComputer : {
-                    if (weight/comp->getWeight()+comp->getWeight() < MAX_WEIGHT) {
+                    if ((weight + comp->getWeight())/comp->getThreadNum() <= MAX_WEIGHT) {
                         comp_mutex.unlock();
                         return comp;
                     }
