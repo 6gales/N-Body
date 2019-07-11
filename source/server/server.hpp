@@ -1,13 +1,11 @@
 #pragma once
 
+#include "../computer/computer.h"
 #include <queue>
 #include <set>
 #include <mutex>
 #include <condition_variable>
 #include <boost/asio.hpp>
-#include "../computer/ompComputer.h"
-#include "serverParser.hpp"
-#include "../computer/sequentialComputer.h"
 
 using namespace boost::asio::ip;
 
@@ -102,6 +100,7 @@ private:
     static unsigned int keys;
     static std::deque<unsigned int> free_keys;
 
+    volatile bool isExistSeqComp = false;
     volatile int count_nodes;
     ull MAX_WEIGHT = 5000;
     std::mutex comp_mutex{};

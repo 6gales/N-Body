@@ -34,10 +34,11 @@ void Server::Connection::handle_read_command(const boost::system::error_code &er
                     delete read_msg;
                     return;
                 }
-                data_particle = computer.get()->iterate();
+                data_particle = computer.get()->iterate(key);
                 if (data_particle.empty()) {
                     computer = server.search_computer(key);
-                    data_particle = computer.get()->iterate();
+                    if (computer == nullptr) server.remove_connection(shared_from_this());
+                    data_particle = computer.get()->iterate(key);
                 }
                 std::string msg = convert_particles_to_msg(data_particle, count);
                 write_message(msg);
@@ -75,11 +76,12 @@ void Server::Connection::handle_read_count(const boost::system::error_code &er) 
 void Server::Connection::handle_read_data(const boost::system::error_code &er) {
     if (!er) {
         data_particle = parse_start_message(read_msg, count);
-        computer.get()->init(data_particle, count);
-        data_particle = computer.get()->iterate();
+        computer.get()->add(key, data_particle, count);
+        data_particle = computer.get()->iterate(key);
         if (data_particle.empty()) {
             computer = server.search_computer(key);
-            data_particle = computer.get()->iterate();
+            if (computer == nullptr) server.remove_connection(shared_from_this());
+            data_particle = computer.get()->iterate(key);
         }
         std::string msg = convert_particles_to_msg(data_particle, count);
         write_message(msg);
@@ -166,20 +168,53 @@ void Server::remove_connection(const std::shared_ptr<Server::Connection> &conn) 
 
 std::shared_ptr<Computer> Server::create_computer(ull weight) {
     comp_mutex.lock();
-    //TODO create balance
-    for (auto & computer : computers) {
-        if (computer == nullptr) {
-            computer = std::shared_ptr<Computer>(new ompComputer(4));
-            comp_mutex.unlock();
-            return computer;
-        } else if (computer->getSize() > MAX_WEIGHT) {
-            continue;
+    for (auto &comp : computers) {
+        if (comp == nullptr) {
+            if (weight > MAX_WEIGHT) {
+//                if (weight > MAX_WEIGHT*4) {
+//                    comp = getInstanceOf(ComputerType::mpiComputer, MAX_WEIGHT / weight + 1);
+//                    comp_mutex.unlock();
+//                    return comp;
+//                } else {
+                    comp = getInstanceOf(ComputerType::ompRKComputer, MAX_WEIGHT / weight + 1);
+                    comp_mutex.unlock();
+                    return comp;
+//                }
+            } else if (!isExistSeqComp) {
+                comp = getInstanceOf(ComputerType::sequentialBHComputer, 0);
+                isExistSeqComp = true;
+                comp_mutex.unlock();
+                return comp;
+            } else {
+                comp = getInstanceOf(ComputerType::ompRKComputer, 4);
+                comp_mutex.unlock();
+                return comp;
+            }
+        } else {
+            switch (comp->getType()) {
+                case sequentialBHComputer : {
+                    if (weight + comp->getWeight() < MAX_WEIGHT) {
+                        comp_mutex.unlock();
+                        return comp;
+                    }
+                    break;
+                }
+                case ompRKComputer : {
+                    if (weight/comp->getWeight()+comp->getWeight() < MAX_WEIGHT) {
+                        comp_mutex.unlock();
+                        return comp;
+                    }
+                    break;
+                }
+                default : {
+                    break;
+                }
+            }
         }
     }
     comp_mutex.unlock();
     MAX_WEIGHT += MAX_WEIGHT;
-    return computers[0];
-//    return create_computer(weight);
+    return create_computer(weight);
 }
 
 void Server::add_new_free_key(unsigned int key) {
@@ -203,7 +238,11 @@ unsigned int Server::gen_new_key() {
 std::shared_ptr<Computer> Server::search_computer(unsigned int key) {
     comp_mutex.lock();
     for (auto &comp : computers) {
-        //TODO search by key
+        if (comp->haveTask(key)) {
+            comp_mutex.unlock();
+            return comp;
+        }
     }
     comp_mutex.unlock();
+    return std::shared_ptr<Computer>{};
 }
