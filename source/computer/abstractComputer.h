@@ -56,6 +56,8 @@ public:
 	Computer(ComputerType _type) : type{ _type }
 	{}
 
+	ComputerType getType() { return type; }
+
 	void add(int key, std::vector<Particle> &particles, ull N)
 	{
 		containersm.lock();

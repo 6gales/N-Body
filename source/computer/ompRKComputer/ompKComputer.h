@@ -13,7 +13,7 @@ private:
 	Vector3D getAcc(ull i);
 
 public:
-	OMPRKComputer(size_t numThreads)
+	OMPRKComputer(ComputerType type, size_t numThreads) : Computer(type)
 	{
 		omp_set_num_threads(numThreads);
 		forces = nullptr;

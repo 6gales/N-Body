@@ -13,5 +13,6 @@ private:
 	Task *t;
 
 public:
+	SequentialBHComputer(ComputerType type) : Computer(type) {}
 	std::vector<Particle> iterate(int);
 };

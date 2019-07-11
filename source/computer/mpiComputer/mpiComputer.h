@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include "../abstractComputer.h"
 #include "boost/bind.hpp"
 #include "boost/asio.hpp"
@@ -39,6 +40,6 @@ class mpiComputer : public Computer
 	};
 
 public:
-	mpiComputer(size_t threads);
+	mpiComputer(ComputerType type, size_t threads);
 	const std::vector<Particle> &iterate(int key);
 };

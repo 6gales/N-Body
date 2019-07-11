@@ -7,7 +7,7 @@
 #include "sequentialBHComputer/sequentialBHComputer.h"
 #include "ompComputer/ompComputer.h"
 #include "ompRKComputer/ompKComputer.h"
-#include "mpiComputer/mpiComputer.h"
+//#include "mpiComputer/mpiComputer.h"
 #include "ComputerType.h"
 
 std::shared_ptr<Computer> getInstanceOf(ComputerType type, size_t threads);

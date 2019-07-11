@@ -1,6 +1,6 @@
 #include "mpiComputer.h"
 
-mpiComputer::mpiComputer(size_t threads)
+mpiComputer::mpiComputer(ComputerType type, size_t threads) : Computer(type)
 {
 	std::string command = "launch.sh";
 	command.append(" " + std::to_string(threads));// + " ")add ip addr and port
