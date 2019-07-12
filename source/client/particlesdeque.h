@@ -15,6 +15,8 @@ public:
 
 	void pop_front();
 
+    void delete_deque();
+
 	std::vector<Particle> get_back();
 
 	std::vector<Particle> get_front();

@@ -2,12 +2,13 @@
 #include "IOException.hpp"
 #include <cstring>
 
-ull parse_file(std::istream &data_file, std::string &start_message, std::vector<float> &particles_mass) {
+ull parse_file(std::istream &data_file, std::string &start_message, std::vector<float> &particles_mass, std::vector<Particle> &first_particles) {
     start_message.append("START", 5);
     std::string count_str;
     std::getline(data_file, count_str);
     ull count = std::stoull(count_str);
     particles_mass.resize(count);
+    first_particles.resize(count);
     char byte_count[sizeof(ull)];
     for (size_t i = 0; i < sizeof(ull); ++i) {
         byte_count[i] = (char)(count >> ((sizeof(ull)-i-1)*sizeof(ull)));
@@ -20,6 +21,7 @@ ull parse_file(std::istream &data_file, std::string &start_message, std::vector<
             const char* p_numb = reinterpret_cast<const char*>(datas+i);
             start_message.append(p_numb, sizeof(float));
         }
+        first_particles[j] = Particle{datas[0], datas[1], datas[2], datas[3], 0, 0, 0};
         particles_mass[j] = datas[0];
         if (data_file.bad()) {
             throw IOException{"data file error"};

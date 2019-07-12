@@ -13,8 +13,9 @@
 #include <iostream>
 #include <fstream>
 #include <ctime>
-#include "computer.h"
 #include "res.h"
+#include "Particle.h"
+#include "../client/client.hpp"
 
 class QOpenGLShaderProgram;
 
@@ -23,7 +24,8 @@ class MapOpenGLWidget : public QOpenGLWidget {
 
 public:
     explicit MapOpenGLWidget(QWidget *parent=nullptr);
-    //~MapOpenGLWidget() override;
+    void set_client(Client *client);
+    ~MapOpenGLWidget() override { timer.stop(); }
 
 protected:
     virtual void initializeGL() override;
@@ -34,28 +36,29 @@ private:
     void initProgram();
     void onTimer();
     void setPalette(const std::vector<QVector4D> &palette);
-    void fromParticleM(const Particle *part);
+    void fromParticleM(std::vector<Particle> &part);
 
     QVector4D fromParticle(const Particle &part);
     QVector4D gridCoord(QVector4D coord);
-    std::vector<QVector4D> createGrid(QVector4D *vertices,unsigned int numOfVectors);
+    std::vector<QVector4D> createGrid(QVector4D *vertices,unsigned long long numOfVectors);
 
 private:
     std::shared_ptr<QOpenGLShaderProgram> program;
+
+    Client *client;
 
     QOpenGLVertexArrayObject vao;
     QOpenGLBuffer vertex_buffer, texcoord_buffer, index_buffer;
     QOpenGLTexture color_texture {QOpenGLTexture::Target2D};
     QVector3D eye=QVector3D(1.0f,0.0f,0.0f);
     std::vector<QVector4D> vertices;
-    //QVector4D * vertices;
     QMatrix4x4 model_matrix, view_matrix, projection_matrix;
     QTimer timer;
-    Computer* computer;
 
     float dist_max = 1e+26;
     int num_of_indices {0};
-    unsigned int numOfVectors;
+    unsigned int shift = 0;
+    unsigned long long numOfVectors;
     double massmax=0.0;
 };
 

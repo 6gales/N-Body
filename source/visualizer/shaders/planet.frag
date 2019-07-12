@@ -8,7 +8,7 @@ out vec4 fragColor;
 void main()
 {
     if(massF>1&&massF<1e+30){
-        fragColor = texture(colorD, (log(massF)/(log(10)*32))).rgba;
+	  fragColor = texture(colorD, (log(massF)/(log(10.0)*32.0))).rgba;
     }
     else if(massF<1){
         fragColor = vec4(0.0,0.0,0.0,1.0);

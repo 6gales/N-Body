@@ -11,11 +11,11 @@ using namespace boost::asio::ip;
 class Client {
 public:
 
-    Client(std::string host, unsigned short port, std::ifstream& data_file);
+    Client(boost::asio::io_service &io_service);
 
     tcp::socket& socket();
 
-    void connect(basic_resolver_results<tcp> ep);
+    void connect(basic_resolver_results<tcp> ep, std::ifstream &data_file);
 
     void write_msg(const std::string msg);
 
@@ -31,27 +31,47 @@ public:
 
     void handle_connect(const boost::system::error_code &er);
 
-    void start(std::ifstream &data_file, basic_resolver_results<tcp> ep);
+    void setIsMap(bool isMap);
 
-    void push_back(const std::vector<Particle>& p);
+    void setIsPaused(bool isPaused);
 
-    void push_front(const std::vector<Particle>& p);
+    void push_back_dyn(const std::vector<Particle>& p);
 
-    void pop_back();
+    void push_front_dyn(const std::vector<Particle>& p);
 
-    void pop_front();
+    void pop_back_dyn();
 
-    std::vector<Particle> get_back();
+    void pop_front_dyn();
 
-    std::vector<Particle> get_front();
+    std::vector<Particle> get_back_dyn();
+
+    std::vector<Particle> get_front_dyn();
+
+    void push_back_map(const std::vector<Particle>& p);
+
+    void push_front_map(const std::vector<Particle>& p);
+
+    void pop_back_map();
+
+    void pop_front_map();
+
+    std::vector<Particle> get_back_map();
+
+    std::vector<Particle> get_front_map();
+
+    void delete_deque_map();
 
     unsigned long long get_count() const;
 
+    const std::vector<Particle>& get_first_particles() const;
+
     const std::vector<float>& get_particles_mass() const;
+
+    void start();
 
     void stop();
 
-    void next();
+    void resume();
 
     void pause();
 
@@ -62,13 +82,21 @@ public:
     }
 
 private:
+    void next();
+
+    std::string start_msg;
+    volatile bool isStart;
+    volatile bool isPaused = false;
+    volatile bool isMap = false;
     mutable unsigned long long COUNT;
     volatile unsigned long long part_count = 0;
     char* read_msg;
-    ParticlesDeque deq{};
-    boost::asio::io_service io_service{};
+    ParticlesDeque deq_dynamic{}, deq_map{};
+    boost::asio::io_service &io_service;
     tcp::socket sock;
+    std::vector<Particle> first_particles;
     std::vector<float> particles_mass;
-    std::mutex mutex_deq;
+    std::mutex mutex_deq_dyn;
+    std::mutex mutex_deq_map;
     std::deque<std::string> send_queue{};
 };

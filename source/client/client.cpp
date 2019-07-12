@@ -10,24 +10,18 @@ using namespace boost::asio::ip;
 using ull = unsigned long long;
 
 
-Client::Client(std::string host, unsigned short port, std::ifstream& data_file)
-            : sock{io_service} {
-    tcp::resolver resolver(io_service);
+Client::Client(boost::asio::io_service &io_service)
+            : io_service{io_service}, sock{io_service} { }
 
-    auto ep = resolver.resolve(host, std::to_string(port));
-
-    std::string start_msg;
-    COUNT = parse_file(data_file, start_msg, particles_mass);
+void Client::connect(basic_resolver_results<tcp> ep, std::ifstream &data_file) {
+    COUNT = parse_file(data_file, start_msg, particles_mass, first_particles);
     if (COUNT == 0) {
-        //TODO kill client
+        return;
     }
     boost::asio::async_connect(sock, ep,
                                boost::bind(&Client::handle_connect, this, boost::asio::placeholders::error));
     std::thread t{boost::bind(&boost::asio::io_service::run, &io_service)};
     t.detach();
-
-    write_msg(start_msg);
-
 }
 
 void Client::write_msg(const std::string msg) {
@@ -85,7 +79,8 @@ void Client::handle_read_count(const boost::system::error_code &er) {
 void Client::handle_buffered_read(const boost::system::error_code &er) {
     if (!er) {
         auto particles = parse_data_msg(read_msg, 5000);
-        push_back(particles);
+        push_back_dyn(particles);
+        push_back_map(particles);
         if (part_count == (COUNT - (((COUNT/5000+1)/2)*5000))) next();
         if (part_count >= 5000) {
             part_count -= 5000;
@@ -104,7 +99,8 @@ void Client::handle_read_data(const boost::system::error_code &er) {
     if (!er) {
 //        std::cerr << std::string(read_msg).size() << std::endl;
         auto particles = parse_data_msg(read_msg, part_count);
-        push_back(particles);
+        push_back_dyn(particles);
+        push_back_map(particles);
         boost::asio::async_read(sock, boost::asio::buffer(read_msg, 5),
               boost::bind(&Client::handle_read_command, this, boost::asio::placeholders::error));
     } else {
@@ -132,60 +128,132 @@ void Client::close() {
     sock.close();
 }
 
-void Client::push_back(const std::vector<Particle>& p) {
-	mutex_deq.lock();
-    deq.push_back(p);
-	mutex_deq.unlock();
+void Client::setIsMap(bool isMap) {
+    this->isMap = isMap;
 }
 
-void Client::push_front(const std::vector<Particle>& p) {
-	mutex_deq.lock();
-    deq.push_front(p);
-	mutex_deq.unlock();
+void Client::setIsPaused(bool isPaused) {
+    this->isPaused = isPaused;
 }
 
-void Client::pop_back() {
-	mutex_deq.lock();
-    deq.pop_back();
-	mutex_deq.unlock();
+void Client::push_back_dyn(const std::vector<Particle>& p) {
+    mutex_deq_dyn.lock();
+    deq_dynamic.push_back(p);
+    mutex_deq_dyn.unlock();
 }
 
-void Client::pop_front() {
-	mutex_deq.lock();
-    deq.pop_front();
-	mutex_deq.unlock();
+void Client::push_front_dyn(const std::vector<Particle>& p) {
+    mutex_deq_dyn.lock();
+    deq_dynamic.push_front(p);
+    mutex_deq_dyn.unlock();
 }
 
-std::vector<Particle> Client::get_back() {
-	mutex_deq.lock();
-    auto res = deq.get_back();
-	mutex_deq.unlock();
+void Client::pop_back_dyn() {
+    mutex_deq_dyn.lock();
+    deq_dynamic.pop_back();
+    mutex_deq_dyn.unlock();
+}
+
+void Client::pop_front_dyn() {
+    mutex_deq_dyn.lock();
+    deq_dynamic.pop_front();
+    mutex_deq_dyn.unlock();
+}
+
+std::vector<Particle> Client::get_back_dyn() {
+    mutex_deq_dyn.lock();
+    auto res = deq_dynamic.get_back();
+    mutex_deq_dyn.unlock();
     return res;
 }
 
-std::vector<Particle> Client::get_front() {
-	mutex_deq.lock();
-    auto res = deq.get_front();
-	mutex_deq.unlock();
+std::vector<Particle> Client::get_front_dyn() {
+    mutex_deq_dyn.lock();
+    auto res = deq_dynamic.get_front();
+    mutex_deq_dyn.unlock();
     return res;
+}
+
+void Client::push_back_map(const std::vector<Particle>& p) {
+    if (!isMap) return;
+    mutex_deq_map.lock();
+    deq_map.push_back(p);
+    mutex_deq_map.unlock();
+}
+
+void Client::push_front_map(const std::vector<Particle>& p) {
+    if (!isMap) return;
+    mutex_deq_map.lock();
+    deq_map.push_front(p);
+    mutex_deq_map.unlock();
+}
+
+void Client::pop_back_map() {
+    mutex_deq_map.lock();
+    deq_map.pop_back();
+    mutex_deq_map.unlock();
+}
+
+void Client::pop_front_map() {
+    mutex_deq_map.lock();
+    deq_map.pop_front();
+    mutex_deq_map.unlock();
+}
+
+std::vector<Particle> Client::get_back_map() {
+    mutex_deq_map.lock();
+    auto res = deq_map.get_back();
+    mutex_deq_map.unlock();
+    return res;
+}
+
+std::vector<Particle> Client::get_front_map() {
+    mutex_deq_map.lock();
+    auto res = deq_map.get_front();
+    mutex_deq_map.unlock();
+    return res;
+}
+
+void Client::delete_deque_map() {
+    deq_map.delete_deque();
 }
 
 const std::vector<float> &Client::get_particles_mass() const {
     return particles_mass;
 }
 
+const std::vector<Particle> &Client::get_first_particles() const {
+    return first_particles;
+}
+
 ull Client::get_count() const {
     return COUNT;
 }
 
-void Client::stop() {
-    write_msg(std::string{"STOP "});
+void Client::resume() {
+    isPaused = false;
+    next();
 }
 
-void Client::next() {
-    write_msg(std::string{"NEXT "});
+void Client::start() {
+    if (!isStart) {
+        write_msg(start_msg);
+        isStart = true;
+    }
+}
+
+void Client::stop() {
+    write_msg(std::string{"STOP "});
+    close();
 }
 
 void Client::pause() {
     write_msg(std::string{"PAUSE"});
+    isPaused = true;
+
+}
+
+void Client::next() {
+    if (isPaused) return;
+    write_msg(std::string{"NEXT "});
 }

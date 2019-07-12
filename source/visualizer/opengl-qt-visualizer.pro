@@ -29,27 +29,30 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp\
+	../client/client.cpp \
+	../client/clientParser.cpp \
+	../client/particlesdeque.cpp \
     Particle.cpp \
     Vector3D.cpp \
-    computer.cpp \
     main_window.cpp \
     map_dialog.cpp \
     mapopenglwidget.cpp \
     my_opengl_widget.cpp \
     res.cpp \
-    sequentialComputer.cpp
 
 HEADERS  += \
+	../client/IOException.hpp \
+	../client/client.hpp \
+	../client/clientParser.hpp \
+	../client/particlesdeque.h \
     Particle.h \
     Vector3D.h \
-    abstractComputer.h \
     computer.h \
     main_window.h \
     map_dialog.h \
     mapopenglwidget.h \
     my_opengl_widget.h \
     res.h \
-    sequentialComputer.h \
 
 
 FORMS    += \

@@ -26,3 +26,7 @@ std::vector<Particle> ParticlesDeque::get_front() {
 	if (deq.empty()) return std::vector<Particle>{};
 	return deq.front();
 }
+
+void ParticlesDeque::delete_deque() {
+    deq = std::deque<std::vector<Particle>>{};
+}

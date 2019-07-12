@@ -5,6 +5,6 @@
 
 using ull = unsigned long long;
 
-ull parse_file(std::istream &data_file, std::string &start_message, std::vector<float> &particles_mass);
+ull parse_file(std::istream &data_file, std::string &start_message, std::vector<float> &particles_mass, std::vector<Particle> &first_particles);
 
 std::vector<Particle> parse_data_msg(const char*, ull);

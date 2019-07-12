@@ -21,7 +21,11 @@ MyOpenGLWidget::MyOpenGLWidget(QWidget *parent) :
     format.setSamples(4);
     setFormat(format);
     connect(&timer, &QTimer::timeout, this, &MyOpenGLWidget::onTimer);
-    timer.start(1000);
+    timer.start(1);
+}
+
+void MyOpenGLWidget::set_client(Client *client) {
+    this->client = client;
 }
 
 void MyOpenGLWidget::initializeGL() {
@@ -36,24 +40,18 @@ void MyOpenGLWidget::initializeGL() {
     initProgram();
 }
 void MyOpenGLWidget::initProgram() {
-    std::ifstream in("C://ssd.sccc//N-Body//source//visualizer//in.txt");
-    in>>numOfVectors;
-    computer = getInstanceOf();
+    numOfVectors = client->get_count();
 
     vertices.resize(numOfVectors);
     std::vector<float> masses(numOfVectors);
     std::vector<unsigned int> points(numOfVectors);
-    std::shared_ptr<Particle> parts(new Particle[numOfVectors]);
+
+    std::vector<float> particles_mass = client->get_particles_mass();
 
     for(unsigned int i = 0; i <numOfVectors; ++i){
-            double mass, x, y, z, vx, vy, vz;
-            in >> mass >> x >> y >> z >> vx >> vy >> vz;
-            parts.get()[i] = Particle(mass, x, y, z, vx, vy, vz);
-            masses[i]=static_cast<float>(mass);
+            masses[i]=static_cast<float>(particles_mass[i]);
             points[i]=i;
     }
-    in.close();
-    computer->init(parts, numOfVectors);
 
     initShaderProgram(&planet, "shaders/planet.frag", "shaders/planet.vert");
     initShaderProgram(&star, "shaders/basic.frag", "shaders/basic.vert");
@@ -271,18 +269,26 @@ void MyOpenGLWidget::keyPressEvent(QKeyEvent *ke){
     }
 }
 void MyOpenGLWidget::onTimer() {
-    fromParticleM(computer->iterate());
+    if (!client) return;
+    auto particles = client->get_front_dyn();
+    client->pop_front_dyn();
+    if (particles.empty()) {
+//        update();
+        return;
+    }
+    fromParticleM(particles);
     vao.bind();
     vertex_buffer.bind();
     vertex_buffer.write(NULL,vertices.data(), static_cast<int>(numOfVectors*sizeof(QVector3D)));
     vao.release();
+    if (numOfVectors == sh) sh = 0;
     update();
 }
 QVector3D MyOpenGLWidget::fromParticle(const Particle &part){
     return QVector3D(part.getX()/pow(10,scale),part.getY()/pow(10,scale),part.getZ()/pow(10,scale));
 }
-void MyOpenGLWidget::fromParticleM(const Particle *part){
-    for(unsigned int i = 0; i<numOfVectors; i++)
-        vertices[i]=fromParticle(part[i]);
-
+void MyOpenGLWidget::fromParticleM(std::vector<Particle> &part){
+    for(unsigned int i = 0; i<part.size(); i++)
+        vertices[i+sh]=fromParticle(part[i]);
+    sh += part.size();
 }

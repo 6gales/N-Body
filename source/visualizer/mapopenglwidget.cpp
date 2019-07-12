@@ -18,7 +18,12 @@ MapOpenGLWidget::MapOpenGLWidget(QWidget *parent) :
     setFormat(format);
 
     connect(&timer, &QTimer::timeout, this, &MapOpenGLWidget::onTimer);
-    timer.start(1000);
+    timer.start(1);
+}
+
+void MapOpenGLWidget::set_client(Client *client) {
+    this->client = client;
+    client->setIsMap(true);
 }
 
 void MapOpenGLWidget::initializeGL() {
@@ -31,24 +36,20 @@ void MapOpenGLWidget::initializeGL() {
     initProgram();
 }
 void MapOpenGLWidget::initProgram() {
-    std::ifstream in("C://ssd.sccc//N-Body//source//visualizer//in.txt");
-    in>>numOfVectors;
-    computer = getInstanceOf();
+    numOfVectors = client->get_count();
 
-    //vertices = new QVector4D[numOfVectors] () ;
     vertices.resize(numOfVectors);
 
-    std::shared_ptr<Particle> parts(new Particle[numOfVectors]);
+    std::vector<float> particles_mass = client->get_particles_mass();
+    std::vector<Particle> parts = client->get_first_particles();
 
     for(unsigned int i = 0; i <numOfVectors; ++i) {
-            double mass, x, y, z, vx, vy, vz;
-            in >> mass >> x >> y >> z >> vx >> vy >> vz;
-            parts.get()[i] = Particle(mass, x, y, z, vx, vy, vz);
-            vertices[i] = QVector4D(static_cast<float>(x),static_cast<float>(y),static_cast<float>(z),static_cast<float>(mass));
-            massmax+=mass;
+//            double mass, x, y, z, vx, vy, vz;
+//            in >> mass >> x >> y >> z >> vx >> vy >> vz;
+//            parts.get()[i] = Particle(mass, x, y, z, vx, vy, vz);
+            vertices[i] = QVector4D(static_cast<float>(parts[i].getX()),static_cast<float>(parts[i].getY()),static_cast<float>(parts[i].getZ()),static_cast<float>(parts[i].getMass()));
+            massmax+=particles_mass[i];
     }
-    in.close();
-    computer->init(parts, numOfVectors);
 
     const std::vector<unsigned int> indices = quadIndices();
 
@@ -114,22 +115,19 @@ void MapOpenGLWidget::resizeGL(int width, int height) {
 QVector4D MapOpenGLWidget::gridCoord(QVector4D coord){
     return QVector4D((coord.x()/DIST_MAX)*50+50,(coord.y()/DIST_MAX)*50+50,0,coord.w());
 }
-std::vector<QVector4D> MapOpenGLWidget::createGrid(QVector4D *vertices,unsigned int numOfVectors){
+std::vector<QVector4D> MapOpenGLWidget::createGrid(QVector4D *vertices,unsigned long long numOfVectors){
     std::vector<QVector4D> palette(10000);
     std::vector<double> mass(100*100, 0.0);
-    /*for(int i =0; i<100; i++){
-        std::fill(mass[i],mass[i]+100,0);
-    }*/
     QVector4D vector;
-    for(int i =0; i < numOfVectors;i++){
+    for(size_t i =0; i < numOfVectors;i++){
         vector=gridCoord(vertices[i]);
         auto x = static_cast<int>(vector.x());
         auto y = static_cast<int>(vector.y());
         if(x<100&&y<100)
             mass[x*100 + y] += static_cast<double>(vector.w());
     }
-    for(int i = 0; i<100;i++){
-        for(int j = 0; j<100; j++){
+    for(size_t i = 0; i<100;i++){
+        for(size_t j = 0; j<100; j++){
             float mass_c=static_cast<float>((mass[i*100 + j])/massmax);
             palette[i*100+j]=QVector4D(mass_c*100,mass_c*10,mass_c,1.0f);
         }
@@ -165,9 +163,19 @@ void MapOpenGLWidget::paintGL() {
 }
 
 void MapOpenGLWidget::onTimer() {
-    fromParticleM(computer->iterate());
-    setPalette(createGrid(vertices.data(), numOfVectors));
-    update();
+    if (!client)  return;
+    auto particles = client->get_front_map();
+    client->pop_front_map();
+    if (particles.empty()) {
+//        update();
+        return;
+    }
+    fromParticleM(particles);
+    if (shift == numOfVectors) {
+        setPalette(createGrid(vertices.data(), numOfVectors));
+        shift = 0;
+        update();
+    }
 }
 
 
@@ -175,8 +183,8 @@ QVector4D MapOpenGLWidget::fromParticle(const Particle &part){
     return QVector4D(part.getX(),part.getY(),part.getZ(), part.getMass());
 }
 
-void MapOpenGLWidget::fromParticleM(const Particle *part){
-    for(unsigned int i = 0; i<numOfVectors; i++)
-        vertices[i]=fromParticle(part[i]);
-
+void MapOpenGLWidget::fromParticleM(std::vector<Particle> &part){
+    for(unsigned int i = 0; i<part.size(); i++)
+        vertices[i+shift]=fromParticle(part[i]);
+    shift += part.size();
 }

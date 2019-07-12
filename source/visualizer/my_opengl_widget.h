@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../client/client.hpp"
 #include <QOpenGLWidget>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
@@ -15,7 +16,6 @@
 #include <iostream>
 #include <fstream>
 #include <ctime>
-#include "computer.h"
 #include "res.h"
 
 class QOpenGLShaderProgram;
@@ -27,7 +27,7 @@ public:
     explicit MyOpenGLWidget(QWidget *parent=nullptr);
     void setPalette(std::vector<QVector3D> palette);
     void setShaderProgram(bool palette);
-
+    void set_client(Client *client);
 protected:
     virtual void initializeGL() override;
     virtual void resizeGL(int width, int height) override;
@@ -43,11 +43,13 @@ private:
     void initProgram();
     void initView();
     QVector3D fromParticle(const Particle &part);
-    void fromParticleM(const Particle *part);
+    void fromParticleM(std::vector<Particle> &part);
     void onTimer();
     void initShaderProgram(std::shared_ptr<QOpenGLShaderProgram> *shpr, const QString &frag, const QString &vert);
 private:
     std::shared_ptr<QOpenGLShaderProgram> star, planet, axisP, program;
+
+    Client *client = nullptr;
 
     QOpenGLVertexArrayObject vao, lao;
     QOpenGLBuffer vertex_buffer, /*color_buffer,*/ index_buffer,mass_buffer,linev_buffer, linec_buffer, linex_buffer;
@@ -55,7 +57,6 @@ private:
     std::vector<QVector3D>  vertices;
     QMatrix4x4 model_matrix, view_matrix, projection_matrix;
     QOpenGLTexture color_texture {QOpenGLTexture::Target1D};
-    Computer* computer;
 
     bool pressedButton =false;
 
@@ -67,6 +68,7 @@ private:
     float yrotation_angle {0.0f};
     float zrotation_angle {0.0f};
     QTimer timer;
-    unsigned int numOfVectors;
+    unsigned int sh = 0;
+    unsigned long long numOfVectors;
 };
 
