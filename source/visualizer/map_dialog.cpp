@@ -10,6 +10,10 @@ MapDialog::MapDialog(QWidget *parent, Client *client) :
     ui->openGLWidget->set_client(client);
 }
 
+void MapDialog::resize_dist_max(bool isStellar) {
+    ui->openGLWidget->resize_dist_max(isStellar);
+}
+
 void MapDialog::reject() {
     QDialog::reject();
     dynamic_cast<MainWindow*>(this->parent())->deleteQDialog();

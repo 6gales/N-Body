@@ -1,12 +1,13 @@
 #pragma once
 
+#include "../client/client.hpp"
 #include <QMainWindow>
 #include <QDialog>
 #include <QOpenGLFunctions>
-#include "../client/client.hpp"
 
 namespace Ui {
-class MainWindow;
+    class MainWindow;
+    class MapDialog;
 }
 class MyOpenGLWidget;
 
@@ -16,11 +17,7 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget *parent = nullptr, Client *client = nullptr);
     ~MainWindow();
-    void deleteQDialog() {
-        client->delete_deque_map();
-        delete dlg;
-        dlg = nullptr;
-    }
+    void deleteQDialog();
 
 private slots:
     void initGlWidget();
@@ -33,6 +30,7 @@ private slots:
     void on_actionPause_triggered();
     void on_actionNext_triggered();
 private:
+    volatile bool isStellar = true;
     QDialog *dlg = nullptr;
     Client *client;
     Ui::MainWindow *ui;

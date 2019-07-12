@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../client/client.hpp"
 #include <QOpenGLWidget>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
@@ -13,9 +14,9 @@
 #include <iostream>
 #include <fstream>
 #include <ctime>
+#include <atomic>
 #include "res.h"
 #include "Particle.h"
-#include "../client/client.hpp"
 
 class QOpenGLShaderProgram;
 
@@ -25,6 +26,7 @@ class MapOpenGLWidget : public QOpenGLWidget {
 public:
     explicit MapOpenGLWidget(QWidget *parent=nullptr);
     void set_client(Client *client);
+    void resize_dist_max(bool isStellar);
     ~MapOpenGLWidget() override { timer.stop(); }
 
 protected:
@@ -55,7 +57,7 @@ private:
     QMatrix4x4 model_matrix, view_matrix, projection_matrix;
     QTimer timer;
 
-    float dist_max = 1e+26;
+    std::atomic<float> dist_max{1e+26};
     int num_of_indices {0};
     unsigned int shift = 0;
     unsigned long long numOfVectors;

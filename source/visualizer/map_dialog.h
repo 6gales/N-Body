@@ -1,9 +1,8 @@
-#ifndef MAP_DIALOG_H
-#define MAP_DIALOG_H
+#pragma once
 
+#include "../client/client.hpp"
 #include <QDialog>
 #include "main_window.h"
-#include "../client/client.hpp"
 
 namespace Ui {
 class MapDialog;
@@ -15,6 +14,7 @@ class MapDialog : public QDialog
 
 public:
     explicit MapDialog(QWidget *parent = nullptr, Client *client = nullptr);
+    void resize_dist_max(bool);
     ~MapDialog() override;
 
 protected:
@@ -24,5 +24,3 @@ private:
     Ui::MapDialog *ui;
     Client *client;
 };
-
-#endif // MAP_DIALOG_H

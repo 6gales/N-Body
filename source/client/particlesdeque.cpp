@@ -28,5 +28,5 @@ std::vector<Particle> ParticlesDeque::get_front() {
 }
 
 void ParticlesDeque::delete_deque() {
-    deq = std::deque<std::vector<Particle>>{};
+    if (!deq.empty()) deq.erase(deq.begin(), deq.end());
 }

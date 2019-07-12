@@ -1,3 +1,5 @@
+#version 330
+
 attribute vec4 vertex;
 attribute vec2 colorD;
 uniform mat4 MVP;

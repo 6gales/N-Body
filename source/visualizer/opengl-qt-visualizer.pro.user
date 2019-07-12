@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.9.2, 2019-07-12T01:46:06. -->
+<!-- Written by QtCreator 4.9.2, 2019-07-12T10:36:30. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -307,7 +307,7 @@
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">opengl-qt-visualizer</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/maksimych/N-Body/source/visualizer/opengl-qt-visualizer.pro</value>
-    <value type="QString" key="RunConfiguration.Arguments">127.0.0.1 1234 /home/maksimych/N-Body/source/visualizer/in.txt</value>
+    <value type="QString" key="RunConfiguration.Arguments">192.168.43.90 1234 /home/maksimych/N-Body/source/visualizer/in.txt</value>
     <value type="uint" key="RunConfiguration.QmlDebugServerPort">3768</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>

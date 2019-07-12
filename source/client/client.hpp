@@ -85,7 +85,7 @@ private:
     void next();
 
     std::string start_msg;
-    volatile bool isStart;
+    volatile bool isStart = false;
     volatile bool isPaused = false;
     volatile bool isMap = false;
     mutable unsigned long long COUNT;

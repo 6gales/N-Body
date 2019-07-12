@@ -1,4 +1,3 @@
-#define DIST_MAX 1e+26
 #include "mapopenglwidget.h"
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
@@ -24,6 +23,14 @@ MapOpenGLWidget::MapOpenGLWidget(QWidget *parent) :
 void MapOpenGLWidget::set_client(Client *client) {
     this->client = client;
     client->setIsMap(true);
+}
+
+void MapOpenGLWidget::resize_dist_max(bool isStellar) {
+    if (isStellar) {
+        dist_max = 1.0e26;
+    } else {
+        dist_max = 3.0e10;
+    }
 }
 
 void MapOpenGLWidget::initializeGL() {
@@ -113,7 +120,7 @@ void MapOpenGLWidget::resizeGL(int width, int height) {
     initProgram();
 }
 QVector4D MapOpenGLWidget::gridCoord(QVector4D coord){
-    return QVector4D((coord.x()/DIST_MAX)*50+50,(coord.y()/DIST_MAX)*50+50,0,coord.w());
+    return QVector4D((coord.x()/dist_max)*50+50,(coord.y()/dist_max)*50+50,0,coord.w());
 }
 std::vector<QVector4D> MapOpenGLWidget::createGrid(QVector4D *vertices,unsigned long long numOfVectors){
     std::vector<QVector4D> palette(10000);
