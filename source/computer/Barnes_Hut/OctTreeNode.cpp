@@ -55,7 +55,7 @@ bool OctTreeNode::computeMassCenter()
 
 OctTreeNode* OctTreeNode::getChild(Direction d)
 {
-	if(!children[d].get())
+	if(!children[d])
 	{
 		children[d].reset(new OctTreeNode(domain.getOctant(d)));
 	}

@@ -104,7 +104,7 @@ private:
 
     volatile bool isExistSeqComp = false;
     volatile int count_nodes;
-    ull MAX_WEIGHT = 5000;
+    ull MAX_WEIGHT = 10000;
     std::mutex comp_mutex{};
     std::vector<std::shared_ptr<Computer>> computers;
     std::mutex conn_mutex{};

@@ -5,6 +5,7 @@
 #include "./N_square/sequentialComputer/sequentialComputer.h"
 #include "Runge_Kuta/sequentialRKComputer/sequentialRKComputer.h"
 #include "./Barnes_Hut/sequentialBHComputer/sequentialBHComputer.h"
+#include "./Barnes_Hut/ompBHComputer/ompBHComputer.h"
 #include "./N_square/ompComputer/ompComputer.h"
 #include "Runge_Kuta/ompRKComputer/ompRKComputer.h"
 //#include "./N_square/mpiComputer/mpiComputer.h"

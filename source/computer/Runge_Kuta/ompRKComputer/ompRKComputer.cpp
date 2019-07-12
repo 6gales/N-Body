@@ -127,4 +127,5 @@ Vector3D OMPRKComputer::getAcc(ull i)
 		F -= forces[i][j];
 	}
 	Vector3D acc = F * (1.0 / t->particleVectors[t->previous][i].mass);
+    return acc;
 }

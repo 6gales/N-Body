@@ -1,5 +1,5 @@
 #pragma once
-#include "OctTree.h"
+#include "../OctTree.h"
 #include "../../abstractComputer.h"
 #include <memory>
 #include <omp.h>

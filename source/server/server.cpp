@@ -165,9 +165,10 @@ void Server::remove_connection(const std::shared_ptr<Server::Connection> &conn) 
         return;
     }
     unsigned int key = connections.find(conn)->get()->get_key();
-    connections.find(conn)->get()->get_computer()->remove(key);
+    std::shared_ptr<Computer> comp = connections.find(conn)->get()->get_computer();
     connections.erase(conn);
     conn_mutex.unlock();
+    if (comp != nullptr) comp->remove(key);
     add_new_free_key(key);
 }
 
@@ -181,9 +182,9 @@ std::shared_ptr<Computer> Server::create_computer(ull weight) {
 //                    comp_mutex.unlock();
 //                    return comp;
 //                } else {
-                    if (count_nodes < MAX_WEIGHT / weight + 1) continue;
-                    comp = getInstanceOf(ComputerType::ompRKComputer, MAX_WEIGHT / weight + 1);
-                    count_nodes -= MAX_WEIGHT / weight + 1;
+                    if (count_nodes < weight / MAX_WEIGHT + 1) continue;
+                    comp = getInstanceOf(ComputerType::ompBHComputer, weight / MAX_WEIGHT + 1);
+                    count_nodes -= weight / MAX_WEIGHT + 1;
                     comp_mutex.unlock();
                     return comp;
 //                }
@@ -196,7 +197,7 @@ std::shared_ptr<Computer> Server::create_computer(ull weight) {
                 return comp;
             } else {
                 if (count_nodes < 4) continue;
-                comp = getInstanceOf(ComputerType::ompRKComputer, 4);
+                comp = getInstanceOf(ComputerType::ompBHComputer, 4);
                 count_nodes -= 4;
                 comp_mutex.unlock();
                 return comp;
@@ -210,7 +211,7 @@ std::shared_ptr<Computer> Server::create_computer(ull weight) {
                     }
                     break;
                 }
-                case ompRKComputer : {
+                case ompBHComputer : {
                     if ((weight + comp->getWeight())/comp->getThreadNum() <= MAX_WEIGHT) {
                         comp_mutex.unlock();
                         return comp;
@@ -224,7 +225,7 @@ std::shared_ptr<Computer> Server::create_computer(ull weight) {
         }
     }
     comp_mutex.unlock();
-    MAX_WEIGHT += MAX_WEIGHT;
+    MAX_WEIGHT += 10000;
     return create_computer(weight);
 }
 
