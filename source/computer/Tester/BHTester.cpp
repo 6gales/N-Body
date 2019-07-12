@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sys/time.h>
 //#include "../computer.h"
-#include "../Runge_Kuta/sequentialRKComputer/sequentialRKComputer.h"
+#include "../Barnes_Hut/sequentialBHComputer/sequentialBHComputer.h"
 
 int main(int argc, char* argv[])
 {
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 
 	struct timeval t1, t2;
 
-	std::shared_ptr<Computer> computer{new SequentialRKComputer(sequentialRKComputer)};
+	std::shared_ptr<Computer> computer{new SequentialBHComputer(sequentialBHComputer)};
 	computer.get()->add(0, array, N);
 
 	gettimeofday(&t1, nullptr);
