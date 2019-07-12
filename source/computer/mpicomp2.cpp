@@ -2,7 +2,7 @@
 #include <cmath>
 #include <fstream>
 #include "mpi.h"
-#include "../Particle/Particle.h"
+#include "Particle/Particle.h"
 #include <iostream>
 #include <sys/time.h>
 #include <stddef.h>
@@ -61,7 +61,7 @@ void divideParticles(int *counts, int *shifts, int N)
 		counts[r] = shifts[r + 1] - shifts[r];
 	}
 
-//	
+
 //	for (int i = 0; i < size; i++)
 //	{
 //		std::cout << "#" << rank << " count N" << i << ": " << counts[i] << std::endl;
@@ -74,7 +74,7 @@ void divideParticles(int *counts, int *shifts, int N)
 
 Vector3D *fillForces(const int *shifts, Particle *particles, int N)
 {
-	auto forces = new Vector3D[N];
+	auto forces = new Vector3D[N * N];
 
 
 	for(int i = shifts[rank]; i < shifts[rank + 1]; ++i)
@@ -103,7 +103,6 @@ Vector3D *fillForces(const int *shifts, Particle *particles, int N)
 Particle *iterate(const int *counts, const int *shifts, Particle *particles, ull N)
 {
 	Vector3D *forces = fillForces(shifts, particles, N);
-	
 
 	for (int r = 0; r <= rank; r++) //each process sends and receive data
 	{
@@ -147,7 +146,7 @@ Particle *iterate(const int *counts, const int *shifts, Particle *particles, ull
 		particles[i].coords = particles[i].coords + particles[i].vel * dt;
 	}
 
-	MPI_Allgatherv(particles, counts[rank], MPI_PARTICLE, dividedParts, counts, shifts, MPI_PARTICLE, MPI_COMM_WORLD);
+	MPI_Allgatherv(dividedParts, counts[rank], MPI_PARTICLE, particles, counts, shifts, MPI_PARTICLE, MPI_COMM_WORLD);
 
 	delete[] dividedParts;
 	delete[] forces;
@@ -187,13 +186,9 @@ int main(int argc, char **argv)
 
 	MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-	std::cout << "da" << std::endl;
-
 	MPI_Bcast(&it, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 	auto particles = new Particle[N];
-	
-	std::cout << "andrey sosi\n";
 
 	if (rank == 0)
 	{
@@ -210,12 +205,11 @@ int main(int argc, char **argv)
 
 	int *counts = new int[size * 2 + 1],
 			*shifts = counts + size;
-	std::cout << "net" << std::endl;
+
 	divideParticles(counts, shifts, N);
 
 	MPI_Bcast(particles, N, MPI_PARTICLE, 0, MPI_COMM_WORLD);
 
-	std::cout << "jopa\n";
 	struct timeval t1, t2;
 
 	gettimeofday(&t1, nullptr);
@@ -239,5 +233,3 @@ int main(int argc, char **argv)
 
 	MPI_Finalize();
 }
-
-
