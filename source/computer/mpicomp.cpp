@@ -2,7 +2,10 @@
 #include <cmath>
 #include <fstream>
 #include "mpi.h"
-#include "../../Particle/Particle.h"
+#include "Particle/Particle.h"
+#include <iostream>
+#include <sys/time.h>
+#include <stddef.h>
 
 
 using ull = unsigned long long;
@@ -45,7 +48,7 @@ void divideParticles(int *counts, int *shifts, int N)
 {
 	int n = N;
 	int n1 = std::ceil(N / sqrt(size));
-	std::cout << "n1: " << n1 << std::endl;
+
 	shifts[0] = 0;
 	shifts[size - 1] = n - n1;
 	shifts[size] = n;
@@ -58,16 +61,15 @@ void divideParticles(int *counts, int *shifts, int N)
 		counts[r] = shifts[r + 1] - shifts[r];
 	}
 
-
-		///////////
-	for (int i = 0; i < size; i++)
-	{
-		std::cout << "#" << rank << " count N" << i << ": " << counts[i] << std::endl;
-	}
-	for (int i = 0; i < size + 1; i++)
-	{
-		std::cout << "#" << rank << " shift N" << i << ": " << shifts[i] << std::endl;
-	}
+//
+//	for (int i = 0; i < size; i++)
+//	{
+//		std::cout << "#" << rank << " count N" << i << ": " << counts[i] << std::endl;
+//	}
+//	for (int i = 0; i < size + 1; i++)
+//	{
+//		std::cout << "#" << rank << " shift N" << i << ": " << shifts[i] << std::endl;
+//	}
 }
 
 Vector3D *fillForces(const int *shifts, Particle *particles, int N)
@@ -102,7 +104,6 @@ Particle *iterate(const int *counts, const int *shifts, Particle *particles, ull
 {
 	Vector3D *forces = fillForces(shifts, particles, N);
 
-	std::cout << "forced" << std::endl;
 
 	for (int r = 0; r <= rank; r++) //each process sends and receive data
 	{
@@ -133,7 +134,6 @@ Particle *iterate(const int *counts, const int *shifts, Particle *particles, ull
 	}
 
 	auto dividedParts = new Particle[counts[rank]];
-	std::cout << "neeew\n";
 
 	for(ull i = shifts[rank]; i < shifts[rank + 1]; ++i)
 	{
@@ -173,19 +173,21 @@ int main(int argc, char **argv)
 	std::cout << rank << std::endl;
 
 	int N;
+	int it;
 	std::ifstream in;
-	std::ofstream out;
 
 	if (rank == 0)
 	{
 		in.open("in.txt");
-		out.open("out.txt");
 
+		in >> it;
 		in >> N;
-		std::cout << N;
+
 	}
 
 	MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	MPI_Bcast(&it, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 	auto particles = new Particle[N];
 
@@ -201,39 +203,37 @@ int main(int argc, char **argv)
 		}
 		in.close();
 	}
-//recv initial data
 
 
 	int *counts = new int[size * 2 + 1],
 			*shifts = counts + size;
 
-	std::cout << "fok\n";
 	divideParticles(counts, shifts, N);
-	
+
 	MPI_Bcast(particles, N, MPI_PARTICLE, 0, MPI_COMM_WORLD);
 
-	for (int iter = 0; iter < 1000; ++iter)
+
+	struct timeval t1, t2;
+
+	gettimeofday(&t1, nullptr);
+
+	for (int iter = 0; iter < it; ++iter)
 	{
 		auto buff = iterate(counts, shifts, particles, N);
-
-		if (rank == 0)
-		{
-			out << "====================ITERATION " << iter << "=====================" << std::endl;
-
-			for (int i = 0; i < N; ++i)
-			{
-//std::cout << buff[i] << std::endl;
-				out << buff[i] << std::endl;
-			}
-			out << "====================ITERATION " << iter << "=====================" << std::endl << std::endl;
-		}
 	}
 
-	if (!rank)
-		out.close();
+	gettimeofday(&t2, nullptr);
+
+	double time = (t2.tv_sec - t1.tv_sec) + ((double)(t2.tv_usec - t1.tv_usec))/1000000;
+
+	std::cout << "Name: " << argv[0] << std::endl
+			  << "Num of parts" << N << std::endl
+			  << "Iterations: " << it << std::endl
+			  << "Time: " << time << " sec." << std::endl;
 
 	delete[] particles;
 	delete[] counts;
 
 	MPI_Finalize();
 }
+
