@@ -25,7 +25,7 @@ struct Task
 	Task(const Task &t) : N(t.N)
 	{
 		particleVectors[0] = t.particleVectors[0];
-		particleVectors[0] = t.particleVectors[0];
+		particleVectors[1] = t.particleVectors[1];
 		previous = t.previous;
 		current = t.current;
 	}
